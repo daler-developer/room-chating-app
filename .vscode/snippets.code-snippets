@@ -1,0 +1,41 @@
+{
+	"useState hook": {
+		"scope": "javascript,typescriptreact,typescript",
+		"prefix": "useState",
+		"body": [
+			"const [$1, set$3$1] = useState($2)"
+		],
+	},
+	"useTypedSelector hook": {
+		"scope": "javascript,typescriptreact,typescript",
+		"prefix": "useSelector",
+		"body": [
+			"const $1 = useTypedSelector($2)$0"
+		],
+	},
+	"useTypedDispatch hook": {
+		"scope": "javascript,typescriptreact,typescript",
+		"prefix": "useDispatch",
+		"body": [
+			"const dispatch = useTypedDispatch()$0"
+		],
+	},
+	"styled component": {
+		"scope": "javascript,typescriptreact",
+		"prefix": "styled",
+		"body": [
+			"const Styled$1 = styled.div$2`",
+			"  $3",
+			"`$0",
+		],
+	},
+	"create function": {
+		"scope": "javascript,typescriptreact",
+		"prefix": "func",
+		"body": [
+			"const $1 = ($2) => {",
+			"  $0",
+			"}"
+		],
+	},
+}
