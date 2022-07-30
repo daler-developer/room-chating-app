@@ -1,4 +1,6 @@
-import { IUsersFilterObj, IUser } from '../models'
+import { IUsersFilterObj } from '../pages/users'
+import { UpdateProfileProps } from '../redux/slices/usersSlice'
+import { IUser } from '../types'
 import { IErrorResponse } from '../types'
 import client from './client'
 
@@ -35,6 +37,41 @@ class UsersService {
 
     return result
   }
+  
+  async getUser({ userId }: { userId: string }) {
+    const result = await client.get<{ user: IUser }>(`/api/users/${userId}`)
+  
+    return result
+  }
+
+  async refreshToken() {
+    const result = await client.post<IAuthResponse>('/api/users/refresh-token')
+
+    return result
+  }
+  
+  async updateProfile({ firstName, lastName, username, avatar, removeAvatar }: UpdateProfileProps) {
+    const form = new FormData()
+
+    if (username) {
+      form.append('username', username)
+    }
+    if (firstName) {
+      form.append('firstName', firstName)
+    }
+    if (lastName) {
+      form.append('lastName', lastName)
+    }
+    if (removeAvatar) {
+      form.append('removeAvatar', 'true')
+    } else if (avatar) {
+      form.append('avatar', avatar)
+    }
+    
+    const result = await client.patch<Pick<IAuthResponse, 'user'>>('/api/users/profile/update', form)
+  
+    return result
+  } 
   
 }
 

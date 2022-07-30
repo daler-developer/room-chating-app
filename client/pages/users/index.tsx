@@ -2,18 +2,24 @@ import { Box, Button, CircularProgress, Container, FormControl, InputLabel, Menu
 import { useRouter } from "next/router"
 import { FormEvent, SyntheticEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { io } from "socket.io-client"
-import AuthProtected from "../components/AuthProtected"
-import FilterBlock, { IFilterObj } from "../components/FilterBlock"
-import Layout from "../components/Layout"
-import SearchForm from "../components/SearchForm"
-import UserCard from "../components/UserCard"
-import useDebounce from "../hooks/useDebounce"
-import useQueryParam from "../hooks/useQueryParam"
-import useTypedDispatch from "../hooks/useTypedDispatch"
-import useTypedSelector from "../hooks/useTypedSelector"
-import { IUsersFilterObj, IUser } from "../models"
-import { usersActions, usersSelectors } from "../redux/slices/usersSlice"
-import usersService from "../services/usersService"
+import AuthProtected from "../../components/AuthProtected"
+import FilterBlock, { IFilterObj } from "../../components/FilterBlock"
+import Layout from "../../components/Layout"
+import SearchForm from "../../components/SearchForm"
+import UserCard from "../../components/UserCard"
+import useDebounce from "../../hooks/useDebounce"
+import useQueryParam from "../../hooks/useQueryParam"
+import useTypedDispatch from "../../hooks/useTypedDispatch"
+import useTypedSelector from "../../hooks/useTypedSelector"
+import { IUser } from "../../types"
+import { usersActions, usersSelectors } from "../../redux/slices/usersSlice"
+import usersService from "../../services/usersService"
+
+export interface IUsersFilterObj {
+  search?: string
+  sort?: 'all' | 'online' | 'offline'
+  page?: number
+}
 
 const sortItems = [
   {

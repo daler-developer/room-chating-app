@@ -1,17 +1,22 @@
-import { Avatar, AvatarGroup, Box, Button, Paper, Typography } from "@mui/material"
-import { LockOutlined as LockIcon, LockOpenOutlined as LockOpenIcon } from '@mui/icons-material'
-import { IRoom } from "../models"
+import { Avatar, AvatarGroup, Box, Button, IconButton, Menu, MenuItem, Paper, Typography } from "@mui/material"
+import { LockOutlined as LockIcon, LockOpenOutlined as LockOpenIcon, MoreVert as MoreVertIcon } from '@mui/icons-material'
+import { IRoom } from "../types"
 import useTypedDispatch from "../hooks/useTypedDispatch"
 import { ModalsEnum, uiActions } from "../redux/slices/uiSlice"
 import { roomsActions } from "../redux/slices/roomsSlice"
 import NextLink from 'next/link'
+import { useRef, useState } from "react"
 
 interface IProps {
   room: IRoom
 }
 
 export default ({ room }: IProps) => {
+  const [isPopupOpen, setIsPopupOpen] = useState(false)
+
   const dispatch = useTypedDispatch()
+
+  const menuBtnRef = useRef(null!)
 
   const handleJoinRoomBtnClick = () => {
     if (room.isPrivate) {
@@ -32,26 +37,51 @@ export default ({ room }: IProps) => {
   }
 
   return (
-    <Paper elevation={3} sx={{ padding: '10px', position: 'relative' }}>
-
-      <Box sx={{ position: 'absolute', top: '15px', right: '15px' }}>
-        {room.isPrivate ? <LockIcon color="error" /> : <LockOpenIcon color="success" />}
-      </Box>
+    <Paper elevation={10} sx={{ padding: '10px', position: 'relative' }}>
 
       <Box sx={{ display: 'flex', alignItems: 'center', columnGap: '10px' }}>
-        <Avatar src={room.creator.avatar} />
-        <Typography>
-          {room.creator.username}
-        </Typography>
-      </Box>
-
-      <Box sx={{ mt: '20px', textAlign: 'center' }}>
         <Typography variant="h5">
           {room.name}
         </Typography>
+
+        <Box sx={{ ml: 'auto', display: 'flex', columnGap: '5px', alignItems: 'center' }}>
+          {room.isPrivate ? <LockIcon color="error" /> : <LockOpenIcon color="success" />}
+          <IconButton onClick={() => setIsPopupOpen(true)} ref={menuBtnRef}>
+            <MoreVertIcon />
+          </IconButton>
+        </Box>
       </Box>
 
-      <Box sx={{ mt: '30px', display: 'flex', alignItems: 'center', columnGap: '15px' }}>
+      <Menu
+        anchorEl={menuBtnRef.current}
+        open={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+      >
+        {
+          room.isCreatedByCurrentUser && (
+            <MenuItem onClick={handleDeleteBtnClick}>
+              Delete
+            </MenuItem>
+          )
+        }
+        {
+          room.isCurrentUserJoined && (
+            <MenuItem onClick={handleLeaveRoomBtnClick}>
+              Leave
+            </MenuItem>
+          )
+        }
+      </Menu>
+
+      <Box sx={{ mt: '100px', display: 'flex', alignItems: 'center', columnGap: '15px' }}>
         <AvatarGroup sx={{ alignSelf: 'end' }}>
           {
             room.participants.map((participant, i) => (
@@ -70,22 +100,12 @@ export default ({ room }: IProps) => {
         </AvatarGroup>
         <Box sx={{ display: 'flex', columnGap: '15px', ml: 'auto' }}>
           {
-            room.isCreatedByCurrentUser && (
-              <Button onClick={handleDeleteBtnClick} color="error" variant="contained">
-                Delete
-              </Button>
-            )
-          }
-          {
             room.isCurrentUserJoined ? <>
               <NextLink passHref href={`/rooms/${room._id}`}>
                 <Button key="enterBtn" sx={{ }} variant="contained">
                   Enter
                 </Button>
               </NextLink>
-              <Button key="leaveBtn" sx={{ }} variant="outlined" color="error" onClick={handleLeaveRoomBtnClick}>
-                Leave
-              </Button>
             </> : <>
               <Button key="joinBtn" sx={{ }} variant="contained" color="success" onClick={handleJoinRoomBtnClick}>
                 Join

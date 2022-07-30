@@ -101,6 +101,28 @@ class RoomsController {
     }
   }
 
+  async getRoomsUserCreated (req: Request, res: Response, next: NextFunction) {
+    try {
+      const creatorId = new ObjectId(req.params.userId)
+
+      const rooms = await roomsService.getRooms({ currentUser: req.user, creatorId })
+      
+      return res.status(200).json({ rooms })
+    } catch (e) {
+      return next(e)
+    }
+  }
+
+  async getRoomsUserJoined (req: Request, res: Response, next: NextFunction) {
+    try {
+      const rooms = await roomsService.getRooms({ currentUser: req.user, participants: [req.user._id] })
+
+      return res.status(200).json({ rooms })
+    } catch (e) {
+      return next(e)
+    }
+  }
+
 }
 
 

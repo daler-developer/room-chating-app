@@ -1,18 +1,21 @@
 import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit"
 import { AxiosError } from "axios"
-import { IUser } from "../../models"
+import { IUser } from "../../types"
 import usersService, { IAuthResponse } from "../../services/usersService"
 import { initSocket, socket } from "../../socket"
+import { IErrorResponse } from "../../types"
 import { RootState } from "../store"
 import { entitiesSelectors } from "./entitiesSlice"
 
 const fetchedMe = createAsyncThunk('auth/fetchedMe', async () => {
   const { data } = await usersService.getMe()
 
-  return data 
+  return data
 })
 
-const login = createAsyncThunk('auth/login', async ({ username, password }: { username: string, password: string }, thunkAPI) => {
+type LoginActionArgType = { username: string, password: string }
+
+const login = createAsyncThunk<IAuthResponse, LoginActionArgType, { rejectValue: IErrorResponse }>('auth/login', async ({ username, password }, thunkAPI) => {
   try {
     const result = await usersService.login(username, password)
 
@@ -22,16 +25,22 @@ const login = createAsyncThunk('auth/login', async ({ username, password }: { us
   
     return data
   } catch (e) {
-    return thunkAPI.rejectWithValue(e)
+    return thunkAPI.rejectWithValue((e as AxiosError<IErrorResponse>).response!.data)
   }
 })
 
-const register = createAsyncThunk('auth/register', async ({ username, firstName, lastName, password,  }: { username: string, firstName: string, lastName: string, password: string }) => {
-  const { data } = await usersService.register(username, firstName, lastName, password)
+type RegisterActionArgType = { username: string, firstName: string, lastName: string, password: string }
 
-  localStorage.setItem('accessToken', data.accessToken)
+const register = createAsyncThunk<IAuthResponse, RegisterActionArgType, { rejectValue: IErrorResponse }>('auth/register', async ({ username, firstName, lastName, password }, thunkAPI) => {
+  try {
+    const { data } = await usersService.register(username, firstName, lastName, password)
   
-  return data
+    localStorage.setItem('accessToken', data.accessToken)
+    
+    return data
+  } catch (e) {
+    return thunkAPI.rejectWithValue((e as AxiosError<IErrorResponse>).response!.data)
+  }
 })
 
 interface IState {

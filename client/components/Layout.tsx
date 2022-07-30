@@ -1,7 +1,9 @@
 import { Box, Container } from "@mui/material"
+import Alert from "./Alert"
 import DeleteRoomModal from "./DeleteRoomModal"
 import Header from "./Header"
 import JoinRoomModal from "./JoinRoomModal"
+import UpdateProfileModal from "./UpdateProfileModal"
 
 export default ({ children }: { children: any }) => {
   return (
@@ -12,6 +14,7 @@ export default ({ children }: { children: any }) => {
       </Container>
       <JoinRoomModal />
       <DeleteRoomModal />
+      <UpdateProfileModal />
     </Box>
   )
 }

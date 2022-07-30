@@ -1,4 +1,5 @@
-import axios from "axios"
+import axios, { AxiosError } from "axios"
+import usersService from "./usersService"
 
 const client = axios.create()
 
@@ -11,5 +12,19 @@ client.interceptors.request.use((config) => {
 
   return config
 })
+
+// client.interceptors.response.use((e) => e, async (error: AxiosError) => {
+  // const originalRequest = error.config
+
+  // if (error.response!.status === 401 && !originalRequest._isRetry) {
+  //   originalRequest._isRetry = true
+
+  //   const { data } = await usersService.refreshToken()
+  
+  //   localStorage.setItem('accessToken', data.accessToken)
+
+  //   return client(originalRequest)
+  // }
+// })
 
 export default client

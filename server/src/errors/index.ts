@@ -1,10 +1,11 @@
+import { ErrorCodeType } from "../types"
 
 export class RequestError extends Error {
   status: number
-  errorCode: string
+  errorCode: ErrorCodeType
   errors?: any[]
 
-  constructor({ message, status, errors , errorCode}: { errorCode: string, message: string, status: number, errors?: any[] }) {
+  constructor({ message, status, errors , errorCode}: { errorCode: ErrorCodeType, message: string, status: number, errors?: any[] }) {
     super(message)
     this.status = status
     this.errors = errors
@@ -14,7 +15,7 @@ export class RequestError extends Error {
 
 export class UserWithSameUsernameAlreadyExistsError extends RequestError {
   constructor() {
-    super({ message: 'User with same username already exists', status: 400, errorCode: 'invalid_data' })
+    super({ message: 'User with same username already exists', status: 400, errorCode: 'user_already_exists' })
   }
 }
 

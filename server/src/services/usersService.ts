@@ -13,11 +13,11 @@ export interface IFitlerObj {
 
 class UsersService {
 
-  private async queryUsers({ filters = {}, page = 1 }: { filters?: object, page?: number }) {
+  private async queryUsers({ $match = {}, page = 1 }: { $match?: object, page?: number }) {
     const results = await collections.users.aggregate([
       {
         $match: {
-          ...filters
+          ...$match
         }
       },
       {
@@ -40,11 +40,17 @@ class UsersService {
   }
 
   async getUserById (_id: ObjectId) {
-    return await collections.users.findOne({ _id })
+    const [user] = await this.queryUsers({ $match: { _id }})
+
+    if (!user) {
+      throw new UserNotFoundError()
+    }
+
+    return user
   }
 
   async getUserByUsername (username: string) {
-    const user = await collections.users.findOne({ username })
+    const [user] = await this.queryUsers({ $match: { username } })
 
     if (!user) {
       throw new UserNotFoundError()
@@ -66,22 +72,22 @@ class UsersService {
     return await this.getUserById(insertedId)
   }
 
-  async getUsers ({ page = 1, search, sort }: IFitlerObj) {
-    const filters = {} as any
+  async getUsers ({ page, search, sort }: IFitlerObj) {
+    const $match = {} as any
 
     if (search) {
-      filters.username = { $regex: new RegExp(search, 'i') }
+      $match.username = { $regex: new RegExp(search, 'i') }
     }
     
     if (sort === 'online') {
-      filters.isOnline = true
+      $match.isOnline = true
     }
     
     if (sort === 'offline') {
-      filters.isOnline = false
+      $match.isOnline = false
     }
 
-    return this.queryUsers({ page, filters })
+    return this.queryUsers({ page, $match })
   }
 
   async getTotalUsersPages ({ search, sort }: { search?: string, sort?: IFitlerObj['sort'] }) {
@@ -110,6 +116,37 @@ class UsersService {
     }
 
     return totalPages
+  }
+
+  async updateProfile ({ userId, removeAvatar = false, newAvatar, newFirstName, newLastName, newUsername }: { userId: ObjectId, newUsername?: string, newFirstName?: string, newLastName?: string, newAvatar?: string, removeAvatar?: boolean }) {
+    const $set = {} as {[key: string]: any}
+    const $unset = {} as {[key: string]: 1 | 0}
+
+    if (newFirstName) {
+      $set.firstName = newFirstName
+    }
+    if (newLastName) {
+      $set.lastName = newLastName
+    }
+    if (newUsername) {
+      $set.username = newUsername
+    }
+
+    if (removeAvatar) {
+      $unset.avatar = 1
+    } else if (newAvatar) {
+      $set.avatar = newAvatar
+    }
+
+    await collections.users.updateOne({ _id: userId }, { $set, $unset })
+
+    const updatedUser = await this.getUserById(userId)
+
+    return updatedUser
+  }
+
+  generateAvatarUrl (filename: string) {
+    return `/uploads/avatars/${filename}`
   }
 }
 

@@ -1,18 +1,23 @@
 import { Box, Button, CircularProgress, Typography } from "@mui/material"
 import { useEffect, useState } from "react"
-import AuthProtected from "../components/AuthProtected"
-import FilterBlock from "../components/FilterBlock"
-import Layout from "../components/Layout"
-import RoomCard from "../components/RoomCard"
-import useTypedDispatch from "../hooks/useTypedDispatch"
-import useTypedSelector from "../hooks/useTypedSelector"
-import { IRoomsFilterObj } from "../models"
-import { roomsActions, selectFeedRooms } from "../redux/slices/roomsSlice"
+import AuthProtected from "../../components/AuthProtected"
+import FilterBlock from "../../components/FilterBlock"
+import Layout from "../../components/Layout"
+import RoomCard from "../../components/RoomCard"
+import useTypedDispatch from "../../hooks/useTypedDispatch"
+import useTypedSelector from "../../hooks/useTypedSelector"
+import { roomsActions, roomsSelectors } from "../../redux/slices/roomsSlice"
+
+export interface IRoomsFilterObj {
+  search?: string
+  sort?: 'all' | 'public' | 'private'
+  page?: number
+}
 
 const sortItems = [{ value: 'all', label: 'All' }, { value: 'public', label: 'Public' }, { value: 'private', label: 'Private' }]
 
 const Home = () => {
-  const rooms = useTypedSelector(selectFeedRooms)
+  const rooms = useTypedSelector(roomsSelectors.selectFeedRooms)
   
   const dispatch = useTypedDispatch()
   

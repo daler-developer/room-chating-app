@@ -3,7 +3,9 @@ import useIsAuthenticated from "../hooks/useIsAuthenticated"
 import useTypedDispatch from "../hooks/useTypedDispatch"
 import { authActions } from "../redux/slices/authSlice"
 import { initSocket, socket } from "../socket"
+import Alert from "./Alert"
 import FullScreenLoader from "./FullScreenLoader"
+import UpdateProfileModal from "./UpdateProfileModal"
 
 export default ({ children }: { children: any }) => {
   const [isFullScreenLoaderVisible, setIsFullScreenLoaderVisible] = useState(true)
@@ -13,9 +15,12 @@ export default ({ children }: { children: any }) => {
   useEffect(() => {
     (async () => {
       try {
-        await dispatch(authActions.fetchedMe()).unwrap()
+        if (localStorage.getItem('accessToken')) {
+          await dispatch(authActions.fetchedMe()).unwrap()
+
+          initSocket()
+        }
         
-        initSocket()
       } catch (e) {
         
       } finally {
@@ -28,5 +33,8 @@ export default ({ children }: { children: any }) => {
     return <FullScreenLoader />
   }
 
-  return children
+  return <>
+    {children}
+    <Alert />
+  </>
 }

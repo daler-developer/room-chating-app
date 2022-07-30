@@ -1,8 +1,9 @@
 import { createAsyncThunk, createEntityAdapter, createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import { AxiosError } from "axios"
 import { normalize } from "normalizr"
-import { IRoom, IRoomsFilterObj, IUser } from "../../models"
+import { IRoomsFilterObj } from "../../pages/rooms"
 import roomsService from "../../services/roomsService"
+import { IErrorResponse, IRoom, IUser } from "../../types"
 import { RootState } from "../store"
 import { authSelectors } from "./authSlice"
 import { entitiesSelectors, RoomEntityType, roomsAdapter, roomSchema, UserEntityType } from "./entitiesSlice"
@@ -23,6 +24,38 @@ const fetchedFeedRooms = createAsyncThunk('rooms/fetchedFeedRooms', async (filte
     } else {
       return thunkAPI.rejectWithValue({ message: 'error' })
     }
+  }
+})
+
+const fetchedRoomsUserCreated = createAsyncThunk<
+  { result: string[], entities: { users?: UserEntityType[], rooms?: RoomEntityType[] } }, 
+  { userId: string }, 
+  { rejectValue: IErrorResponse }
+>('rooms/fetchedRoomsUserCreated', async ({ userId }, thunkAPI) => {
+  try {
+    const { data } = await roomsService.getRoomsUserCreated({ userId })
+
+    const normalized = normalize<any, { users?: UserEntityType[], rooms?: RoomEntityType[] }>(data.rooms, [roomSchema])
+
+    return { ...normalized }
+  } catch (e) {
+    return thunkAPI.rejectWithValue((e as AxiosError<IErrorResponse>).response!.data)
+  }
+})
+
+const fetchedRoomsUserJoined = createAsyncThunk<
+  { result: string[], entities: { users?: UserEntityType[], rooms?: RoomEntityType[] } }, 
+  { userId: string }, 
+  { rejectValue: IErrorResponse }
+>('rooms/fetchedRoomsUserJoined', async ({ userId }, thunkAPI) => {
+  try {
+    const { data } = await roomsService.getRoomsUserJoined({ userId })
+
+    const normalized = normalize<any, { users?: UserEntityType[], rooms?: RoomEntityType[] }>(data.rooms, [roomSchema])
+
+    return { ...normalized }
+  } catch (e) {
+    return thunkAPI.rejectWithValue((e as AxiosError<IErrorResponse>).response!.data)
   }
 })
 
@@ -67,6 +100,18 @@ interface IState {
     error: string | null
     totalPages: number
   }
+  profile: {
+    created: {
+      list: Array<string>
+      isFetching: boolean
+      error: string | null  
+    }
+    joined: {
+      list: Array<string>
+      isFetching: boolean
+      error: string | null  
+    }
+  }
 }
 
 const initialState: IState = {
@@ -77,7 +122,19 @@ const initialState: IState = {
     isFetching: false,
     error: null,
     totalPages: 0
-  }
+  },
+  profile: {
+    created: {
+      list: [],
+      error: null,
+      isFetching: false
+    },
+    joined: {
+      list: [],
+      error: null,
+      isFetching: false
+    }
+  },
 }
 
 const roomsSlice = createSlice({
@@ -97,13 +154,37 @@ const roomsSlice = createSlice({
         state.feed.isFetching = true
       })
       .addCase(fetchedFeedRooms.fulfilled, (state, { payload }) => {
-        state.feed.list = payload!.result
+        state.feed.list = payload.result
         state.feed.isFetching = false
         state.feed.totalPages = payload.totalPages
       })
       .addCase(fetchedFeedRooms.rejected, (state, { payload }) => {
         state.feed.isFetching = false
         state.feed.error = (payload as { message: string }).message
+      })
+      .addCase(fetchedRoomsUserCreated.pending, (state, { payload }) => {
+        state.profile.created.error = null
+        state.profile.created.isFetching = true
+      })
+      .addCase(fetchedRoomsUserCreated.fulfilled, (state, { payload }) => {
+        state.profile.created.list = payload.result
+        state.profile.created.isFetching = false
+      })
+      .addCase(fetchedRoomsUserCreated.rejected, (state, { payload }) => {
+        state.profile.created.isFetching = false
+        state.profile.created.error = payload!.message
+      })
+      .addCase(fetchedRoomsUserJoined.pending, (state, { payload }) => {
+        state.profile.joined.error = null
+        state.profile.joined.isFetching = true
+      })
+      .addCase(fetchedRoomsUserJoined.fulfilled, (state, { payload }) => {
+        state.profile.joined.list = payload.result
+        state.profile.joined.isFetching = false
+      })
+      .addCase(fetchedRoomsUserJoined.rejected, (state, { payload }) => {
+        state.profile.joined.isFetching = false
+        state.profile.joined.error = payload!.message
       })
       .addCase(roomDeleted.fulfilled, (state, { payload }) => {
         state.feed.list = state.feed.list.filter((item) => item !== payload.roomId)
@@ -116,7 +197,9 @@ export const roomsActions = {
   fetchedFeedRooms,
   joinedRoom,
   leftRoom,
-  roomDeleted
+  roomDeleted,
+  fetchedRoomsUserCreated,
+  fetchedRoomsUserJoined
 }
 
 export const roomsSelectors = {
@@ -126,15 +209,28 @@ export const roomsSelectors = {
   selectIdOfRoomUserIsDeleting(state: RootState) {
     return state.rooms.idOfRoomUserIsDeleting
   },
-}
-
-export const selectFeedRooms = (state: RootState) => {
-  return {
-    list: entitiesSelectors.selectRoomsByIds(state, state.rooms.feed.list),
-    isFetching: state.rooms.feed.isFetching,
-    error: state.rooms.feed.error,
-    totalPages: state.rooms.feed.totalPages
-  }
+  selectFeedRooms(state: RootState) {
+    return {
+      list: entitiesSelectors.selectRoomsByIds(state, state.rooms.feed.list),
+      isFetching: state.rooms.feed.isFetching,
+      error: state.rooms.feed.error,
+      totalPages: state.rooms.feed.totalPages
+    }
+  },
+  selectRoomsUserCreated(state: RootState) {
+    return {
+      list: entitiesSelectors.selectRoomsByIds(state, state.rooms.profile.created.list),
+      isFetching: state.rooms.profile.created.isFetching,
+      error: state.rooms.profile.created.error
+    }
+  },
+  selectRoomsUserJoined(state: RootState) {
+    return {
+      list: entitiesSelectors.selectRoomsByIds(state, state.rooms.profile.joined.list),
+      isFetching: state.rooms.profile.joined.isFetching,
+      error: state.rooms.profile.joined.error
+    }
+  },
 }
 
 export default roomsSlice

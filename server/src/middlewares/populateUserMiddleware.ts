@@ -17,7 +17,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
         const decoded = tokensService.verifyToken(token) as any
 
         const user = await usersService.getUserById(new ObjectId(decoded.userId))
-
+        
         req.user = user
 
         return next()
@@ -26,6 +26,6 @@ export default async (req: Request, res: Response, next: NextFunction) => {
   
     throw new NotAuthenticatedError()
   } catch (e) {
-    next(e)
+    return next(e)
   }
 }

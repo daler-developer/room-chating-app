@@ -9,6 +9,7 @@ import { authActions } from "../redux/slices/authSlice"
 import { socket, initSocket } from "../socket"
 import { useForm } from "react-hook-form"
 import { yupResolver } from '@hookform/resolvers/yup'
+import { IErrorResponse } from "../types"
 
 interface IFormValues {
   username: string
@@ -41,8 +42,25 @@ export default () => {
     resolver: yupResolver(validationSchema)
   })
 
+  const handleError = (data: IErrorResponse) => {
+    switch (data.errorCode) {
+      case 'validation_error':
+        data.errors.forEach(error => {
+          form.setError(error.path as keyof IFormValues, { message: error.messages[0] })
+        })
+        break
+      case 'user_already_exists':
+        form.setError('username', { message: data.message })
+        break
+    }
+  }
+
   const handleSubmit = async ({ username, password, firstName, lastName }: IFormValues) => {
-    await dispatch(authActions.register({ username, firstName, lastName, password })).unwrap()
+    try {
+      await dispatch(authActions.register({ username, firstName, lastName, password })).unwrap()
+    } catch (e) {
+      handleError(e as IErrorResponse)
+    }
   }
 
   return (

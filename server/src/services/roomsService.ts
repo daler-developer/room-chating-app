@@ -87,7 +87,7 @@ class RoomsService {
     return await this.getRoomById({ currentUser, roomId })
   }
 
-  async getRooms ({ currentUser, page, search, sort }: IFitlerObj & { currentUser: IUser }) {
+  async getRooms ({ currentUser, creatorId, page, search, sort, participants }: IFitlerObj & { creatorId?: ObjectId, currentUser: IUser, participants?: ObjectId[] }) {
     const $match = {} as any
 
     if (search) {
@@ -100,6 +100,14 @@ class RoomsService {
     
     if (sort === 'private') {
       $match.isPrivate = true
+    }
+
+    if (participants) {
+      $match.participants_ids = { $all: participants }
+    }
+
+    if (creatorId) {
+      $match.creatorId = creatorId
     }
 
     return await this.queryRooms({ currentUser, $match, page })

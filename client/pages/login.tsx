@@ -42,14 +42,18 @@ export default () => {
     resolver: yupResolver(validationSchema)
   })
 
-  const handleAxiosError = (e: AxiosError<IErrorResponse>) => {
-    const data = e.response!.data
-
+  const handleAxiosError = (data: IErrorResponse) => {
     switch (data.errorCode) {
       case 'validation_error':
         data.errors.forEach(error => {
-          form.setError(error.path as 'username' | 'password', { message: error.messages[0] })
+          form.setError(error.path as keyof IFormValues, { message: error.messages[0] })
         })
+        break
+      case 'user_not_found':
+        form.setError('username', { message: data.message })
+        break
+      case 'incorrect_password':
+        form.setError('password', { message: data.message })
         break
     }
   }
@@ -61,9 +65,7 @@ export default () => {
       initSocket()
       socket.emit('login')
     } catch (e) {
-      if (e instanceof AxiosError) {
-        handleAxiosError(e)
-      }
+      handleAxiosError(e as IErrorResponse)
     }
   }
 

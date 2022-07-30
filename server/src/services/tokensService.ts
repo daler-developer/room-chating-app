@@ -1,18 +1,23 @@
 import * as jwt from 'jsonwebtoken'
 import { ObjectId } from 'mongodb'
 import collections from '../db/collections'
+import { NotAuthenticatedError } from '../errors'
 
 class TokensService {
 
   generateTokens (userId: ObjectId) {
-    const accessToken =  jwt.sign({ userId: userId.toString() }, 'jwt_secret', { expiresIn: '1h' })
-    const refreshToken = jwt.sign({ userId: userId.toString() }, 'jwt_secret', { expiresIn: '2 days' })
+    const accessToken =  jwt.sign({ userId: userId.toString() }, 'jwt_secret', { expiresIn: '2 days' })
+    const refreshToken = jwt.sign({ userId: userId.toString() }, 'jwt_secret', { expiresIn: '3 days' })
 
     return { accessToken, refreshToken }
   }
 
   verifyToken (token: string) {
-    return jwt.decode(token, 'jwt_secret' as any)
+    try {
+      return jwt.verify(token, 'jwt_secret' as any)
+    } catch (e) {
+      throw new NotAuthenticatedError()
+    }
   }
 
   async saveRefreshToken (userId: ObjectId, refreshToken: string) {

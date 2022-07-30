@@ -1,7 +1,8 @@
 import { Card, CardContent, Typography, CardActions, Button, Paper } from "@mui/material"
 import { useEffect, useState } from "react"
 import useTypedDispatch from "../hooks/useTypedDispatch"
-import { IUser } from "../models"
+import { IUser } from "../types"
+import NextLink from 'next/link'
 import { usersActions } from "../redux/slices/usersSlice"
 import { socket } from "../socket"
 import CustomAvatar from "./CustomAvatar"
@@ -24,17 +25,19 @@ export default ({ user }: IProps) => {
   }, [])
   
   return (
-    <Paper elevation={3} sx={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', rowGap: '20px' }}>
+    <NextLink passHref href={`/users/${user._id}`}>
+      <Paper elevation={3} sx={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', rowGap: '20px' }}>
 
-      <CustomAvatar
-        withBadge={user.isOnline}
-      />
+        <CustomAvatar
+          withBadge={user.isOnline}
+        />
 
-      <Typography>
-        {user.username}
-      </Typography>
+        <Typography>
+          {user.username}
+        </Typography>
 
 
-    </Paper>
+      </Paper>
+    </NextLink>
   )
 }

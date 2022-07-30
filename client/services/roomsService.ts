@@ -1,4 +1,5 @@
-import { IRoom, IRoomsFilterObj } from '../models'
+import { IRoomsFilterObj } from '../pages/rooms'
+import { IRoom } from '../types'
 import client from './client'
 
 class RoomsService {
@@ -9,6 +10,18 @@ class RoomsService {
     }) 
 
     return result
+  }
+  
+  async getRoomsUserCreated ({ userId }: { userId: string }) {
+    const result = await client.get<{ rooms: IRoom[] }>(`/api/users/${userId}/rooms/created`) 
+  
+    return result 
+  }
+
+  async getRoomsUserJoined ({ userId }: { userId: string }) {
+    const result = await client.get<{ rooms: IRoom[] }>(`/api/users/${userId}/rooms/joined`) 
+  
+    return result 
   }
   
   async joinRoom ({ roomId, password }: { roomId: string, password?: string }) {    

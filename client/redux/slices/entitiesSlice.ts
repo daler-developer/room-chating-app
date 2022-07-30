@@ -1,6 +1,6 @@
 import { createEntityAdapter, createSlice } from "@reduxjs/toolkit"
 import { schema, normalize, denormalize } from 'normalizr'
-import { IRoom, IUser } from "../../models"
+import { IRoom, IUser } from "../../types"
 import { RootState } from "../store"
 import { authActions } from "./authSlice"
 import { roomsActions } from "./roomsSlice"
@@ -47,6 +47,22 @@ const entitiesSlice = createSlice({
           usersAdapter.upsertMany(state.users, payload.entities.users)
         }
       })
+      .addCase(roomsActions.fetchedRoomsUserCreated.fulfilled, (state, { payload }) => {
+        if (payload.entities.rooms) {
+          roomsAdapter.upsertMany(state.rooms, payload.entities.rooms)
+        }
+        if (payload.entities.users) {
+          usersAdapter.upsertMany(state.users, payload.entities.users)
+        }
+      })
+      .addCase(roomsActions.fetchedRoomsUserJoined.fulfilled, (state, { payload }) => {
+        if (payload.entities.rooms) {
+          roomsAdapter.upsertMany(state.rooms, payload.entities.rooms)
+        }
+        if (payload.entities.users) {
+          usersAdapter.upsertMany(state.users, payload.entities.users)
+        }
+      })
       .addCase(authActions.fetchedMe.fulfilled, (state, { payload }) => {
         usersAdapter.upsertOne(state.users, payload.user)
       })
@@ -60,6 +76,9 @@ const entitiesSlice = createSlice({
         if (payload!.entities.users) {
           usersAdapter.upsertMany(state.users, payload!.entities.users)
         }
+      })
+      .addCase(usersActions.fetchedUser.fulfilled, (state, { payload }) => {
+        usersAdapter.upsertOne(state.users, payload.user)
       })
       .addCase(roomsActions.joinedRoom.fulfilled, (state, { payload }) => {
         const oldRoom = state.rooms.entities[payload.roomId]!
