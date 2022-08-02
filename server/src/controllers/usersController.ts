@@ -179,7 +179,7 @@ class UsersController {
       let validatedData: unknown
 
       try {
-        validatedData = await updateProfileValidationSchema.validate(req.body)
+        validatedData = await updateProfileValidationSchema.validate(req.body, { abortEarly: false })
       } catch (e) {
         if (e instanceof yup.ValidationError) {
           const errors = yupUtils.formatErrors(e)
@@ -191,23 +191,15 @@ class UsersController {
       }
 
       const { removeAvatar, firstName, lastName, username } = validatedData as IValidatedData
-
-      const arg = { userId: req.user._id, removeAvatar } as any
-
-      if (firstName) {
-        arg.newFirstName = firstName
-      }
-      if (lastName) {
-        arg.newLastName = lastName
-      }
-      if (username) {
-        arg.newUsername = username
-      }
-      if (req.file) {
-        arg.newAvatar = usersService.generateAvatarUrl(req.file.filename)
-      }
       
-      const updatedUser = await usersService.updateProfile(arg)
+      const updatedUser = await usersService.updateProfile({
+        userId: req.user._id,
+        removeAvatar,
+        ...(firstName && { newFirstName: firstName  }),
+        ...(lastName && { newLastName: lastName  }),
+        ...(username && { newUsername: username  }),
+        ...(req.file && { newAvatar: usersService.generateAvatarUrl(req.file.filename)  }),
+      })
 
       return res.json({ user: updatedUser })
     } catch (e) {

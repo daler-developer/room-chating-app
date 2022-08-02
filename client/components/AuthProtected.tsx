@@ -1,9 +1,9 @@
-import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
-import useIsAuthenticated from "../hooks/useIsAuthenticated"
-import useTypedSelector from "../hooks/useTypedSelector"
-import { authSelectors } from "../redux/slices/authSlice"
-import FullScreenLoader from "./FullScreenLoader"
+import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
+import useIsAuthenticated from '../hooks/useIsAuthenticated'
+import useTypedSelector from '../hooks/useTypedSelector'
+import { authSelectors } from '../redux/slices/authSlice'
+import FullScreenLoader from './FullScreenLoader'
 
 export default ({ children }: any) => {
   const isAuthenticated = useIsAuthenticated()

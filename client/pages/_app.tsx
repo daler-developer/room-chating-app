@@ -9,11 +9,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <Provider store={store}>
-      <App>
-        {
-          getLayout(<Component {...pageProps} />)
-        }
-      </App>
+      <App>{getLayout(<Component {...pageProps} />)}</App>
     </Provider>
   )
 }

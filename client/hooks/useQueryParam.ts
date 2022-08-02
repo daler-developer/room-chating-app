@@ -1,4 +1,4 @@
-import { useRouter } from "next/router"
+import { useRouter } from 'next/router'
 
 export default (param: string): [string, (v: string) => void] => {
   const router = useRouter()

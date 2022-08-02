@@ -1,95 +1,148 @@
-import { createAsyncThunk, createEntityAdapter, createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit"
-import { AxiosError } from "axios"
-import { normalize } from "normalizr"
-import { IRoomsFilterObj } from "../../pages/rooms"
-import roomsService from "../../services/roomsService"
-import { IErrorResponse, IRoom, IUser } from "../../types"
-import { RootState } from "../store"
-import { authSelectors } from "./authSlice"
-import { entitiesSelectors, RoomEntityType, roomsAdapter, roomSchema, UserEntityType } from "./entitiesSlice"
+import {
+  createAsyncThunk,
+  createEntityAdapter,
+  createSelector,
+  createSlice,
+  PayloadAction,
+} from '@reduxjs/toolkit'
+import { AxiosError } from 'axios'
+import { normalize } from 'normalizr'
+import { IRoomsFilterObj } from '../../pages/rooms'
+import roomsService from '../../services/roomsService'
+import { IErrorResponse, IRoom, IUser } from '../../types'
+import { RootState } from '../store'
+import { authSelectors } from './authSlice'
+import {
+  entitiesSelectors,
+  RoomEntityType,
+  roomsAdapter,
+  roomSchema,
+  UserEntityType,
+} from './entitiesSlice'
 
-const fetchedFeedRooms = createAsyncThunk('rooms/fetchedFeedRooms', async (filterObj: IRoomsFilterObj, thunkAPI) => {
-  try {
-    const { data } = await roomsService.getRooms(filterObj)
+const fetchedFeedRooms = createAsyncThunk(
+  'rooms/fetchedFeedRooms',
+  async (filterObj: IRoomsFilterObj, thunkAPI) => {
+    try {
+      const { data } = await roomsService.getRooms(filterObj)
 
-    const normalized = normalize<any, { users?: UserEntityType[], rooms?: RoomEntityType[] }>(data.rooms, [roomSchema])
+      const normalized = normalize<
+        any,
+        { users?: UserEntityType[]; rooms?: RoomEntityType[] }
+      >(data.rooms, [roomSchema])
 
-    return {
-      ...normalized,
-      totalPages: data.totalPages
-    }
-  } catch (e) {
-    if (e instanceof AxiosError) {
-      return thunkAPI.rejectWithValue(e.response!.data)
-    } else {
-      return thunkAPI.rejectWithValue({ message: 'error' })
+      return {
+        ...normalized,
+        totalPages: data.totalPages,
+      }
+    } catch (e) {
+      if (e instanceof AxiosError) {
+        return thunkAPI.rejectWithValue(e.response!.data)
+      } else {
+        return thunkAPI.rejectWithValue({ message: 'error' })
+      }
     }
   }
-})
+)
 
 const fetchedRoomsUserCreated = createAsyncThunk<
-  { result: string[], entities: { users?: UserEntityType[], rooms?: RoomEntityType[] } }, 
-  { userId: string }, 
+  {
+    result: string[]
+    entities: { users?: UserEntityType[]; rooms?: RoomEntityType[] }
+  },
+  { userId: string },
   { rejectValue: IErrorResponse }
 >('rooms/fetchedRoomsUserCreated', async ({ userId }, thunkAPI) => {
   try {
     const { data } = await roomsService.getRoomsUserCreated({ userId })
 
-    const normalized = normalize<any, { users?: UserEntityType[], rooms?: RoomEntityType[] }>(data.rooms, [roomSchema])
+    const normalized = normalize<
+      any,
+      { users?: UserEntityType[]; rooms?: RoomEntityType[] }
+    >(data.rooms, [roomSchema])
 
     return { ...normalized }
   } catch (e) {
-    return thunkAPI.rejectWithValue((e as AxiosError<IErrorResponse>).response!.data)
+    return thunkAPI.rejectWithValue(
+      (e as AxiosError<IErrorResponse>).response!.data
+    )
   }
 })
 
 const fetchedRoomsUserJoined = createAsyncThunk<
-  { result: string[], entities: { users?: UserEntityType[], rooms?: RoomEntityType[] } }, 
-  { userId: string }, 
+  {
+    result: string[]
+    entities: { users?: UserEntityType[]; rooms?: RoomEntityType[] }
+  },
+  { userId: string },
   { rejectValue: IErrorResponse }
 >('rooms/fetchedRoomsUserJoined', async ({ userId }, thunkAPI) => {
   try {
     const { data } = await roomsService.getRoomsUserJoined({ userId })
 
-    const normalized = normalize<any, { users?: UserEntityType[], rooms?: RoomEntityType[] }>(data.rooms, [roomSchema])
+    const normalized = normalize<
+      any,
+      { users?: UserEntityType[]; rooms?: RoomEntityType[] }
+    >(data.rooms, [roomSchema])
 
     return { ...normalized }
   } catch (e) {
-    return thunkAPI.rejectWithValue((e as AxiosError<IErrorResponse>).response!.data)
+    return thunkAPI.rejectWithValue(
+      (e as AxiosError<IErrorResponse>).response!.data
+    )
   }
 })
 
-const joinedRoom = createAsyncThunk('rooms/joinedRoom', async ({ roomId, password }: { roomId: string, password?: string }, thunkAPI) => {
-  try {
-    const { _id: userId } = authSelectors.selectCurrentUser(thunkAPI.getState() as RootState)!
-    await roomsService.joinRoom({ roomId, password })
-    
-    return { roomId, userId }
-  } catch (e) {
-    return thunkAPI.rejectWithValue('test')
+const joinedRoom = createAsyncThunk(
+  'rooms/joinedRoom',
+  async (
+    { roomId, password }: { roomId: string; password?: string },
+    thunkAPI
+  ) => {
+    try {
+      const { _id: userId } = authSelectors.selectCurrentUser(
+        thunkAPI.getState() as RootState
+      )!
+      await roomsService.joinRoom({ roomId, password })
+
+      return { roomId, userId }
+    } catch (e) {
+      return thunkAPI.rejectWithValue('test')
+    }
   }
-})
+)
 
-const leftRoom = createAsyncThunk('rooms/leftRoom', async (roomId: string, thunkAPI) => {
-  try {
-    const { _id: userId } = authSelectors.selectCurrentUser(thunkAPI.getState() as RootState)!
-    await roomsService.leaveRoom({ roomId })
+const leftRoom = createAsyncThunk(
+  'rooms/leftRoom',
+  async (roomId: string, thunkAPI) => {
+    try {
+      const { _id: userId } = authSelectors.selectCurrentUser(
+        thunkAPI.getState() as RootState
+      )!
+      await roomsService.leaveRoom({ roomId })
 
-    return { roomId, userId }
-  } catch {
-    return thunkAPI.rejectWithValue('test')
+      return { roomId, userId }
+    } catch {
+      return thunkAPI.rejectWithValue('test')
+    }
   }
-})
+)
 
-const roomDeleted = createAsyncThunk('rooms/roomDeleted', async ({ roomId, password }: { roomId: string, password: string }, thunkAPI) => {
-  try {
-    const { data } = await roomsService.deleteRoom({ roomId, password })
+const roomDeleted = createAsyncThunk(
+  'rooms/roomDeleted',
+  async (
+    { roomId, password }: { roomId: string; password: string },
+    thunkAPI
+  ) => {
+    try {
+      const { data } = await roomsService.deleteRoom({ roomId, password })
 
-    return { roomId }
-  } catch (e) {
-    return thunkAPI.rejectWithValue('test')
+      return { roomId }
+    } catch (e) {
+      return thunkAPI.rejectWithValue('test')
+    }
   }
-})
+)
 
 interface IState {
   idOfRoomUserIsJoining: string | null
@@ -104,12 +157,12 @@ interface IState {
     created: {
       list: Array<string>
       isFetching: boolean
-      error: string | null  
+      error: string | null
     }
     joined: {
       list: Array<string>
       isFetching: boolean
-      error: string | null  
+      error: string | null
     }
   }
 }
@@ -121,19 +174,19 @@ const initialState: IState = {
     list: [],
     isFetching: false,
     error: null,
-    totalPages: 0
+    totalPages: 0,
   },
   profile: {
     created: {
       list: [],
       error: null,
-      isFetching: false
+      isFetching: false,
     },
     joined: {
       list: [],
       error: null,
-      isFetching: false
-    }
+      isFetching: false,
+    },
   },
 }
 
@@ -187,9 +240,11 @@ const roomsSlice = createSlice({
         state.profile.joined.error = payload!.message
       })
       .addCase(roomDeleted.fulfilled, (state, { payload }) => {
-        state.feed.list = state.feed.list.filter((item) => item !== payload.roomId)
+        state.feed.list = state.feed.list.filter(
+          (item) => item !== payload.roomId
+        )
       })
-  }
+  },
 })
 
 export const roomsActions = {
@@ -199,7 +254,7 @@ export const roomsActions = {
   leftRoom,
   roomDeleted,
   fetchedRoomsUserCreated,
-  fetchedRoomsUserJoined
+  fetchedRoomsUserJoined,
 }
 
 export const roomsSelectors = {
@@ -214,21 +269,27 @@ export const roomsSelectors = {
       list: entitiesSelectors.selectRoomsByIds(state, state.rooms.feed.list),
       isFetching: state.rooms.feed.isFetching,
       error: state.rooms.feed.error,
-      totalPages: state.rooms.feed.totalPages
+      totalPages: state.rooms.feed.totalPages,
     }
   },
   selectRoomsUserCreated(state: RootState) {
     return {
-      list: entitiesSelectors.selectRoomsByIds(state, state.rooms.profile.created.list),
+      list: entitiesSelectors.selectRoomsByIds(
+        state,
+        state.rooms.profile.created.list
+      ),
       isFetching: state.rooms.profile.created.isFetching,
-      error: state.rooms.profile.created.error
+      error: state.rooms.profile.created.error,
     }
   },
   selectRoomsUserJoined(state: RootState) {
     return {
-      list: entitiesSelectors.selectRoomsByIds(state, state.rooms.profile.joined.list),
+      list: entitiesSelectors.selectRoomsByIds(
+        state,
+        state.rooms.profile.joined.list
+      ),
       isFetching: state.rooms.profile.joined.isFetching,
-      error: state.rooms.profile.joined.error
+      error: state.rooms.profile.joined.error,
     }
   },
 }

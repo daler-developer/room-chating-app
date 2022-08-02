@@ -1,61 +1,56 @@
-import { createAction, createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { normalize } from "normalizr";
-import { IErrorResponse, IUser } from "../../types";
+import {
+  createAction,
+  createAsyncThunk,
+  createSlice,
+  PayloadAction,
+} from '@reduxjs/toolkit'
+import { normalize } from 'normalizr'
+import { IErrorResponse, IUser } from '../../types'
 import { IUsersFilterObj } from '../../pages/users'
-import usersService from "../../services/usersService";
-import { RootState } from "../store";
-import { entitiesSelectors, UserEntityType, userSchema } from "./entitiesSlice"
+import usersService from '../../services/usersService'
+import { RootState } from '../store'
+import { entitiesSelectors, UserEntityType, userSchema } from './entitiesSlice'
 import { AxiosError } from 'axios'
-
-export interface UpdateProfileProps { 
-  firstName?: string, 
-  lastName?: string,
-  username?: string, 
-  avatar?: File,
-  removeAvatar?: boolean 
-}
 
 const userLoggedIn = createAction<{ userId: string }>('users/userLoggedIn')
 const userLoggedOut = createAction<{ userId: string }>('users/userLoggedOut')
 
-const fetchedFeedUsers = createAsyncThunk('users/fetchedFeedUsers', async (filterObj: IUsersFilterObj, thunkAPI) => {
-  try {
-    const { data } = await usersService.getUsers(filterObj)
+const fetchedFeedUsers = createAsyncThunk(
+  'users/fetchedFeedUsers',
+  async (filterObj: IUsersFilterObj, thunkAPI) => {
+    try {
+      const { data } = await usersService.getUsers(filterObj)
 
-    const normalized = normalize<any, { users: UserEntityType[] }>(data.users, [userSchema])
-    
-    return {
-      ...normalized,
-      totalPages: data.totalPages
-    }
-  } catch (e) {
-    if (e instanceof AxiosError) {
-      return thunkAPI.rejectWithValue(e.response!.data)
+      const normalized = normalize<any, { users: UserEntityType[] }>(
+        data.users,
+        [userSchema]
+      )
+
+      return {
+        ...normalized,
+        totalPages: data.totalPages,
+      }
+    } catch (e) {
+      if (e instanceof AxiosError) {
+        return thunkAPI.rejectWithValue(e.response!.data)
+      }
     }
   }
-})
+)
 
-const fetchedUser = createAsyncThunk<{ user: IUser }, { userId: string }, { rejectValue: IErrorResponse }>('users/fetchedUser', async ({ userId }, thunkAPI) => {
+const fetchedUser = createAsyncThunk<
+  { user: IUser },
+  { userId: string },
+  { rejectValue: IErrorResponse }
+>('users/fetchedUser', async ({ userId }, thunkAPI) => {
   try {
     const { data } = await usersService.getUser({ userId })
-    
-    return data
-  } catch (e) {
-    return thunkAPI.rejectWithValue((e as AxiosError<IErrorResponse>).response!.data)
-  }
-})
-
-const profileUpdated = createAsyncThunk<
-  { user: IUser },
-  UpdateProfileProps,
-  { rejectValue: IErrorResponse }
->('users/profileUpdated', async (updateProps, thunkAPI) => {
-  try {
-    const { data } = await usersService.updateProfile(updateProps)
 
     return data
   } catch (e) {
-    return thunkAPI.rejectWithValue((e as AxiosError<IErrorResponse>).response!.data)
+    return thunkAPI.rejectWithValue(
+      (e as AxiosError<IErrorResponse>).response!.data
+    )
   }
 })
 
@@ -64,7 +59,7 @@ interface IState {
     user: string | null
     isFetching: boolean
     error: string | null
-  },
+  }
   feed: {
     list: string[]
     totalPages: number
@@ -77,23 +72,26 @@ const initialState: IState = {
   profile: {
     user: null,
     isFetching: false,
-    error: null
+    error: null,
   },
   feed: {
     list: [],
     totalPages: 0,
     isFetching: false,
-    error: null
-  }
+    error: null,
+  },
 }
 
 const usersSlice = createSlice({
   name: 'users',
   initialState,
   reducers: {
-    changedUserOnlineStatus(state, { payload }: PayloadAction<{ userId: string, to: boolean }>) {
+    changedUserOnlineStatus(
+      state,
+      { payload }: PayloadAction<{ userId: string; to: boolean }>
+    ) {
       // state.feed.list = state.feed.list.map((user) => user._id === payload.userId ? ({ ...user, isOnline: payload.to }) : user)
-    }
+    },
   },
   extraReducers(builder) {
     builder
@@ -122,7 +120,7 @@ const usersSlice = createSlice({
         state.profile.isFetching = false
         state.profile.error = payload!.message
       })
-  }
+  },
 })
 
 export const usersActions = {
@@ -130,8 +128,7 @@ export const usersActions = {
   fetchedFeedUsers,
   userLoggedIn,
   userLoggedOut,
-  fetchedUser,
-  profileUpdated
+  fetchedUser
 }
 
 export const usersSelectors = {
@@ -140,14 +137,16 @@ export const usersSelectors = {
       list: entitiesSelectors.selectUsersByIds(state, state.users.feed.list),
       isFetching: state.users.feed.isFetching,
       error: state.users.feed.error,
-      totalPages: state.users.feed.totalPages
+      totalPages: state.users.feed.totalPages,
     }
   },
   selectProfileUser(state: RootState) {
     return {
-      user: state.users.profile.user ? entitiesSelectors.selectUserById(state, state.users.profile.user) : null,
+      user: state.users.profile.user
+        ? entitiesSelectors.selectUserById(state, state.users.profile.user)
+        : null,
       isFetching: state.users.profile.isFetching,
-      error: state.users.profile.error
+      error: state.users.profile.error,
     }
   },
 }

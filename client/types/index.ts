@@ -1,4 +1,3 @@
-
 export interface IUser {
   _id: string
   username: string
@@ -21,12 +20,12 @@ export interface IRoom {
 }
 
 export type ErrorCodeType =
-  'validation_error' |
-  'user_not_found' |
-  'incorrect_password' |
-  'not_authenticated' |
-  'user_already_exists' |
-  'unknown_error'
+  | 'validation_error'
+  | 'user_not_found'
+  | 'incorrect_password'
+  | 'not_authenticated'
+  | 'user_already_exists'
+  | 'unknown_error'
 
 export interface IErrorResponse {
   errorCode: ErrorCodeType

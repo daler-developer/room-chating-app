@@ -1,7 +1,7 @@
-import { InputAdornment, TextField } from "@mui/material"
+import { InputAdornment, TextField } from '@mui/material'
 import { Search } from '@mui/icons-material'
-import { SyntheticEvent, useEffect, useState } from "react"
-import useDebounce from "../hooks/useDebounce"
+import { SyntheticEvent, useEffect, useState } from 'react'
+import useDebounce from '../hooks/useDebounce'
 
 interface IProps {
   value: string
@@ -11,15 +11,15 @@ interface IProps {
 export default ({ value, onChange }: IProps) => {
   return (
     <TextField
-      size="small"
+      size='small'
       fullWidth
-      placeholder="Search"
+      placeholder='Search'
       value={value}
       onChange={onChange}
       sx={{ bgcolor: 'white' }}
       InputProps={{
         startAdornment: (
-          <InputAdornment position="start">
+          <InputAdornment position='start'>
             <Search />
           </InputAdornment>
         ),

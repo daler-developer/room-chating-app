@@ -1,4 +1,4 @@
-import { Avatar, Badge } from "@mui/material"
+import { Avatar, Badge } from '@mui/material'
 import { styled } from '@mui/material/styles'
 
 interface IProps {
@@ -9,16 +9,16 @@ export default ({ withBadge }: IProps) => {
   if (withBadge) {
     return (
       <StyledBadge
-        overlap="circular"
+        overlap='circular'
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        variant="dot"
+        variant='dot'
       >
-        <Avatar alt="Remy Sharp" />
+        <Avatar alt='Remy Sharp' />
       </StyledBadge>
     )
   }
 
-  return <Avatar alt="Remy Sharp" />
+  return <Avatar alt='Remy Sharp' />
 }
 
 var StyledBadge = styled(Badge)(({ theme }) => ({

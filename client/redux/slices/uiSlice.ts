@@ -7,7 +7,7 @@ import { authActions } from './authSlice'
 export enum ModalsEnum {
   JOIN_ROOM,
   DELETE_ROOM,
-  UPDATE_PROFILE
+  UPDATE_PROFILE,
 }
 
 interface IState {
@@ -22,8 +22,8 @@ const initialState: IState = {
   currentActiveModal: null,
   alert: {
     isOpen: false,
-    message: null
-  }
+    message: null,
+  },
 }
 
 const uiSlice = createSlice({
@@ -41,7 +41,7 @@ const uiSlice = createSlice({
     },
     openAlert(state, { payload }: PayloadAction<string>) {
       state.alert = { isOpen: true, message: payload }
-    }
+    },
   },
   extraReducers(builder) {
     builder
@@ -57,7 +57,7 @@ const uiSlice = createSlice({
             state.alert = { isOpen: true, message: payload!.message }
         }
       })
-  }
+  },
 })
 
 export const uiActions = {

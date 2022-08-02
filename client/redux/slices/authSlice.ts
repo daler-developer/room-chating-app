@@ -1,11 +1,44 @@
-import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit"
-import { AxiosError } from "axios"
-import { IUser } from "../../types"
-import usersService, { IAuthResponse } from "../../services/usersService"
-import { initSocket, socket } from "../../socket"
-import { IErrorResponse } from "../../types"
-import { RootState } from "../store"
-import { entitiesSelectors } from "./entitiesSlice"
+import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit'
+import { AxiosError } from 'axios'
+import { IUser } from '../../types'
+import usersService, { IAuthResponse } from '../../services/usersService'
+import { initSocket, socket } from '../../socket'
+import { IErrorResponse } from '../../types'
+import { RootState } from '../store'
+import { entitiesSelectors, UserEntityType, userSchema } from './entitiesSlice'
+import { normalize } from 'normalizr'
+
+export interface UpdateProfileProps {
+  firstName?: string
+  lastName?: string
+  username?: string
+  avatar?: File
+  removeAvatar?: boolean
+}
+
+const profileUpdated = createAsyncThunk<
+  {
+    result: string
+    entities: { users?: UserEntityType[] }
+  },
+  UpdateProfileProps,
+  { rejectValue: IErrorResponse }
+>('users/profileUpdated', async (updateProps, thunkAPI) => {
+  try {
+    const { data } = await usersService.updateProfile(updateProps)
+    
+    const normalized = normalize<any>(
+      data.user,
+      userSchema
+    )
+
+    return { ...normalized }
+  } catch (e) {
+    return thunkAPI.rejectWithValue(
+      (e as AxiosError<IErrorResponse>).response!.data
+    )
+  }
+})
 
 const fetchedMe = createAsyncThunk('auth/fetchedMe', async () => {
   const { data } = await usersService.getMe()
@@ -13,35 +46,60 @@ const fetchedMe = createAsyncThunk('auth/fetchedMe', async () => {
   return data
 })
 
-type LoginActionArgType = { username: string, password: string }
+type LoginActionArgType = { username: string; password: string }
 
-const login = createAsyncThunk<IAuthResponse, LoginActionArgType, { rejectValue: IErrorResponse }>('auth/login', async ({ username, password }, thunkAPI) => {
+const login = createAsyncThunk<
+  IAuthResponse,
+  LoginActionArgType,
+  { rejectValue: IErrorResponse }
+>('auth/login', async ({ username, password }, thunkAPI) => {
   try {
     const result = await usersService.login(username, password)
 
     const data = result.data as IAuthResponse
 
     localStorage.setItem('accessToken', data.accessToken)
-  
+
     return data
   } catch (e) {
-    return thunkAPI.rejectWithValue((e as AxiosError<IErrorResponse>).response!.data)
+    return thunkAPI.rejectWithValue(
+      (e as AxiosError<IErrorResponse>).response!.data
+    )
   }
 })
 
-type RegisterActionArgType = { username: string, firstName: string, lastName: string, password: string }
+type RegisterActionArgType = {
+  username: string
+  firstName: string
+  lastName: string
+  password: string
+}
 
-const register = createAsyncThunk<IAuthResponse, RegisterActionArgType, { rejectValue: IErrorResponse }>('auth/register', async ({ username, firstName, lastName, password }, thunkAPI) => {
-  try {
-    const { data } = await usersService.register(username, firstName, lastName, password)
-  
-    localStorage.setItem('accessToken', data.accessToken)
-    
-    return data
-  } catch (e) {
-    return thunkAPI.rejectWithValue((e as AxiosError<IErrorResponse>).response!.data)
+const register = createAsyncThunk<
+  IAuthResponse,
+  RegisterActionArgType,
+  { rejectValue: IErrorResponse }
+>(
+  'auth/register',
+  async ({ username, firstName, lastName, password }, thunkAPI) => {
+    try {
+      const { data } = await usersService.register(
+        username,
+        firstName,
+        lastName,
+        password
+      )
+
+      localStorage.setItem('accessToken', data.accessToken)
+
+      return data
+    } catch (e) {
+      return thunkAPI.rejectWithValue(
+        (e as AxiosError<IErrorResponse>).response!.data
+      )
+    }
   }
-})
+)
 
 interface IState {
   currentUser: string | null
@@ -50,15 +108,13 @@ interface IState {
 
 const initialState: IState = {
   currentUser: null,
-  isFetchingMe: false
+  isFetchingMe: false,
 }
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
-  reducers: {
-
-  },
+  reducers: {},
   extraReducers(builder) {
     builder
       .addCase(login.fulfilled, (state, { payload }) => {
@@ -77,14 +133,15 @@ const authSlice = createSlice({
       .addCase(fetchedMe.rejected, (state, { payload }) => {
         state.isFetchingMe = false
       })
-  }
+  },
 })
 
 export const authActions = {
   ...authSlice.actions,
   login,
   register,
-  fetchedMe
+  fetchedMe,
+  profileUpdated
 }
 
 export const authSelectors = {
@@ -99,7 +156,7 @@ export const authSelectors = {
   },
   selectIsAuthenticated(state: RootState) {
     return Boolean(state.auth.currentUser)
-  }
+  },
 }
 
 export default authSlice

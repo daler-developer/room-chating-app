@@ -120,7 +120,7 @@ class UsersService {
 
   async updateProfile ({ userId, removeAvatar = false, newAvatar, newFirstName, newLastName, newUsername }: { userId: ObjectId, newUsername?: string, newFirstName?: string, newLastName?: string, newAvatar?: string, removeAvatar?: boolean }) {
     const $set = {} as {[key: string]: any}
-    const $unset = {} as {[key: string]: 1 | 0}
+    const $unset = {} as {[key: string]: any}
 
     if (newFirstName) {
       $set.firstName = newFirstName

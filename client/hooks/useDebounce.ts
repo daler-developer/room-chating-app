@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from 'react'
 
-function useDebounce<V> (value: V, milliseconds: number = 2000) {
+function useDebounce<V>(value: V, milliseconds: number = 2000) {
   const [debounced, setDebounced] = useState(value)
 
   useEffect(() => {

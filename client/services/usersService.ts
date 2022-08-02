@@ -1,3 +1,4 @@
+import { AxiosResponse } from 'axios'
 import { IUsersFilterObj } from '../pages/users'
 import { UpdateProfileProps } from '../redux/slices/usersSlice'
 import { IUser } from '../types'
@@ -5,42 +6,59 @@ import { IErrorResponse } from '../types'
 import client from './client'
 
 export interface IAuthResponse {
-  user: IUser,
+  user: IUser
   accessToken: string
   refreshToken: string
 }
 
 class UsersService {
-
   async getMe() {
-    const result = await client.get<Pick<IAuthResponse, 'user'>>('/api/users/me')
+    const result = await client.get<Pick<IAuthResponse, 'user'>>(
+      '/api/users/me'
+    )
 
     return result
   }
 
   async login(username: string, password: string) {
-    const result = await client.post<IAuthResponse | IErrorResponse>('/api/users/login', { username, password })
+    const result = await client.post<IAuthResponse | IErrorResponse>(
+      '/api/users/login',
+      { username, password }
+    )
 
     return result
   }
-  
-  async register(username: string, firstName: string, lastName: string, password: string) {
-    const result = await client.post<IAuthResponse>('/api/users/register', { username, firstName, lastName, password })
+
+  async register(
+    username: string,
+    firstName: string,
+    lastName: string,
+    password: string
+  ) {
+    const result = await client.post<IAuthResponse>('/api/users/register', {
+      username,
+      firstName,
+      lastName,
+      password,
+    })
 
     return result
   }
 
   async getUsers({ search, sort, page }: IUsersFilterObj) {
-    const result = await client.get<{ users: IUser[], totalPages: number }>('/api/users', {
-      params: { search, sort, page }
-    })
+    const result = await client.get<{ users: IUser[]; totalPages: number }>(
+      '/api/users',
+      {
+        params: { search, sort, page },
+      }
+    )
 
     return result
   }
-  
+
   async getUser({ userId }: { userId: string }) {
     const result = await client.get<{ user: IUser }>(`/api/users/${userId}`)
-  
+
     return result
   }
 
@@ -49,8 +67,14 @@ class UsersService {
 
     return result
   }
-  
-  async updateProfile({ firstName, lastName, username, avatar, removeAvatar }: UpdateProfileProps) {
+
+  async updateProfile({
+    firstName,
+    lastName,
+    username,
+    avatar,
+    removeAvatar,
+  }: UpdateProfileProps) {
     const form = new FormData()
 
     if (username) {
@@ -67,12 +91,14 @@ class UsersService {
     } else if (avatar) {
       form.append('avatar', avatar)
     }
-    
-    const result = await client.patch<Pick<IAuthResponse, 'user'>>('/api/users/profile/update', form)
-  
+
+    const result = await client.patch<{ user: IUser }>(
+      '/api/users/profile/update',
+      form
+    )
+
     return result
-  } 
-  
+  }
 }
 
 export default new UsersService()
