@@ -3,6 +3,16 @@ import { IRoom } from '../types'
 import client from './client'
 
 class RoomsService {
+  async createRoom({ name, password }: { name: string, password?: string }) {
+    const result = await client.post<{
+      room: IRoom
+    }>('/api/rooms', {
+      name, password
+    })
+  
+    return result
+  }
+
   async getRooms({ page, search, sort }: IRoomsFilterObj) {
     const result = await client.get<{
       rooms: Array<IRoom>

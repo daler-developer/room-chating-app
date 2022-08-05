@@ -8,6 +8,7 @@ export enum ModalsEnum {
   JOIN_ROOM,
   DELETE_ROOM,
   UPDATE_PROFILE,
+  CREATE_ROOM,
 }
 
 interface IState {
@@ -19,7 +20,7 @@ interface IState {
 }
 
 const initialState: IState = {
-  currentActiveModal: null,
+  currentActiveModal: ModalsEnum.CREATE_ROOM,
   alert: {
     isOpen: false,
     message: null,
@@ -73,6 +74,9 @@ export const uiSelectors = {
   },
   selectIsUpdateProfileModalOpen(state: RootState): boolean {
     return state.ui.currentActiveModal === ModalsEnum.UPDATE_PROFILE
+  },
+  selectIsCreateRoomModalOpen(state: RootState): boolean {
+    return state.ui.currentActiveModal === ModalsEnum.CREATE_ROOM
   },
   selectAlert(state: RootState) {
     return state.ui.alert

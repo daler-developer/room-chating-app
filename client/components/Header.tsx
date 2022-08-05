@@ -84,8 +84,24 @@ export default () => {
 
           <Box
             component='nav'
-            sx={{ ml: 'auto', display: 'flex', columnGap: '10px' }}
+            sx={{
+              ml: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              columnGap: '10px',
+            }}
           >
+            <Button
+              size='small'
+              variant='outlined'
+              onClick={() =>
+                dispatch(
+                  uiActions.changedCurrentActiveModal(ModalsEnum.CREATE_ROOM)
+                )
+              }
+            >
+              New Room
+            </Button>
             <NextLink href='/rooms' passHref>
               <IconButton>
                 <HomeOutlinedIcon />

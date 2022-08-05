@@ -20,6 +20,25 @@ import {
   UserEntityType,
 } from './entitiesSlice'
 
+const createdRoom = createAsyncThunk<{
+  result: string
+  entities: { rooms?: RoomEntityType[] }
+}, { name: string, password?: string }, { rejectValue: IErrorResponse }>('rooms/createdRoom', async ({ name, password }, thunkAPI) => {
+  try {
+    const { data } = await roomsService.createRoom({ name, password })
+
+    const normalized = normalize<any, { rooms: RoomEntityType[] }>(data.room, roomSchema)
+
+    console.log(normalized)
+    
+    return { ...normalized }
+  } catch (e) {
+    return thunkAPI.rejectWithValue(
+      (e as AxiosError<IErrorResponse>).response!.data
+    )
+  }
+})
+
 const fetchedFeedRooms = createAsyncThunk(
   'rooms/fetchedFeedRooms',
   async (filterObj: IRoomsFilterObj, thunkAPI) => {
@@ -255,6 +274,7 @@ export const roomsActions = {
   roomDeleted,
   fetchedRoomsUserCreated,
   fetchedRoomsUserJoined,
+  createdRoom,
 }
 
 export const roomsSelectors = {

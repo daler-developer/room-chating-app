@@ -34,7 +34,8 @@ class RoomsService {
           isCurrentUserJoined: { $in: [currentUser._id, '$participants_ids'] },
           totalNumParticipants: { $size: '$participants_ids' },
           participants_ids: { $slice: ['$participants_ids', 2] },
-          isCreatedByCurrentUser: { $eq: ['$creatorId', currentUser._id] }
+          isCreatedByCurrentUser: { $eq: ['$creatorId', currentUser._id] },
+          isPrivate: { $and: ['$password'] }
         }
       },
       {
@@ -69,16 +70,15 @@ class RoomsService {
     return room
   }
 
-  async createRoom ({ name, isPrivate, password, creatorId, currentUser }: { currentUser: IUser, name: string, isPrivate: boolean, password?: string, creatorId: ObjectId }) {
+  async createRoom ({ name, password, creatorId, currentUser }: { currentUser: IUser, name: string, password?: string, creatorId: ObjectId }) {
     const data = {
       name,
-      isPrivate,
       creatorId,
       participants_ids: [],
       messages_ids: []
     } as any
 
-    if (isPrivate) {
+    if (password) {
       data.password = password
     }
 

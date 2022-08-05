@@ -22,12 +22,12 @@ export default ({ user }: IProps) => {
   const dispatch = useTypedDispatch()
 
   useEffect(() => {
-    socket.on(`user.${user._id}.login`, () => {
-      dispatch(usersActions.userLoggedIn({ userId: user._id }))
-    })
-    socket.on(`user.${user._id}.logout`, () => {
-      dispatch(usersActions.userLoggedOut({ userId: user._id }))
-    })
+    // socket.on(`user.${user._id}.login`, () => {
+    //   dispatch(usersActions.userLoggedIn({ userId: user._id }))
+    // })
+    // socket.on(`user.${user._id}.logout`, () => {
+    //   dispatch(usersActions.userLoggedOut({ userId: user._id }))
+    // })
   }, [])
 
   return (

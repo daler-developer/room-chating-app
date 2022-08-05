@@ -3,6 +3,8 @@ import { ObjectId } from 'mongodb'
 import roomsService, { IFitlerObj as IUsersFilterObj } from '../services/roomsService'
 import { IncorrectPasswordError, ValidationError } from '../errors'
 import * as Joi from 'joi'
+import * as yup from 'yup'
+import * as yupUtils from '../utils/yup'
 
 const getRoomsValidationSchema = Joi.object<{ page?: number, search?: string, sort?: IUsersFilterObj['sort'] }>({
   page: Joi.number().min(1),
@@ -12,6 +14,11 @@ const getRoomsValidationSchema = Joi.object<{ page?: number, search?: string, so
 
 const deleteRoomValidationScheam = Joi.object<{ password: string }>({
   password: Joi.string().trim().min(6).max(20).required()
+})
+
+const createRoomValidationSchema = yup.object({
+  name: yup.string().trim().required().min(3).max(20),
+  password: yup.string().trim().min(6).max(20)
 })
 
 class RoomsController {
@@ -35,10 +42,27 @@ class RoomsController {
   
   async createRoom (req: Request, res: Response, next: NextFunction) {
     try {
-      const currentUser = req.user
-      const { name, password, isPrivate } = req.body
+      interface IValidatedData { name: string, password?: string }
 
-      const room = await roomsService.createRoom({ currentUser, name, isPrivate, password, creatorId: currentUser!._id  })
+      let validatedData: unknown
+
+      const currentUser = req.user
+
+      try {
+        validatedData = await createRoomValidationSchema.validate(req.body, { abortEarly: false })
+      } catch (e) { 
+        if (e instanceof yup.ValidationError) {
+          const errors = yupUtils.formatErrors(e)
+  
+          throw new ValidationError(errors)
+        } else {
+          throw e
+        }
+      }
+
+      const { name, password } = validatedData as IValidatedData
+
+      const room = await roomsService.createRoom({ currentUser, name, password, creatorId: currentUser!._id  })
 
       return res.status(202).json({ room })
     } catch (e) {

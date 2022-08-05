@@ -1,5 +1,6 @@
 import { Box, Container } from '@mui/material'
 import Alert from './Alert'
+import CreateRoomModal from './CreateRoomModal'
 import DeleteRoomModal from './DeleteRoomModal'
 import Header from './Header'
 import JoinRoomModal from './JoinRoomModal'
@@ -13,6 +14,7 @@ export default ({ children }: { children: any }) => {
       <JoinRoomModal />
       <DeleteRoomModal />
       <UpdateProfileModal />
+      <CreateRoomModal />
     </Box>
   )
 }
