@@ -1,47 +1,47 @@
 import {
   createAsyncThunk,
-  createEntityAdapter,
-  createSelector,
   createSlice,
   PayloadAction,
 } from '@reduxjs/toolkit'
 import { AxiosError } from 'axios'
-import { normalize } from 'normalizr'
-import { IRoomsFilterObj } from '../../pages/rooms'
+import { normalize, NormalizedSchema } from 'normalizr'
+import { IFilterObj as IRoomsFilterObj } from '../../pages/rooms'
 import roomsService from '../../services/roomsService'
-import { IErrorResponse, IRoom, IUser } from '../../types'
+import { ErrorResponseType, IRoom, IUser } from '../../types'
 import { RootState } from '../store'
 import { authSelectors } from './authSlice'
 import {
   entitiesSelectors,
   RoomEntityType,
-  roomsAdapter,
   roomSchema,
   UserEntityType,
 } from './entitiesSlice'
 
-const createdRoom = createAsyncThunk<{
-  result: string
-  entities: { rooms?: RoomEntityType[] }
-}, { name: string, password?: string }, { rejectValue: IErrorResponse }>('rooms/createdRoom', async ({ name, password }, thunkAPI) => {
+const createdRoom = createAsyncThunk<
+  NormalizedSchema<{ room?: RoomEntityType }, string>, 
+  { name: string, password?: string }, 
+  { rejectValue: ErrorResponseType }
+>('rooms/createdRoom', async ({ name, password }, thunkAPI) => {
   try {
     const { data } = await roomsService.createRoom({ name, password })
 
-    const normalized = normalize<any, { rooms: RoomEntityType[] }>(data.room, roomSchema)
-
-    console.log(normalized)
+    const normalized = normalize(data.room, roomSchema)
     
     return { ...normalized }
   } catch (e) {
     return thunkAPI.rejectWithValue(
-      (e as AxiosError<IErrorResponse>).response!.data
+      (e as ErrorResponseType)
     )
   }
 })
 
-const fetchedFeedRooms = createAsyncThunk(
+const fetchedFeedRooms = createAsyncThunk<
+  NormalizedSchema<{ rooms?: RoomEntityType[] }, string[]> & { totalPages: number },
+  IRoomsFilterObj, 
+  { rejectValue: ErrorResponseType }
+>(
   'rooms/fetchedFeedRooms',
-  async (filterObj: IRoomsFilterObj, thunkAPI) => {
+  async (filterObj, thunkAPI) => {
     try {
       const { data } = await roomsService.getRooms(filterObj)
 
@@ -55,46 +55,31 @@ const fetchedFeedRooms = createAsyncThunk(
         totalPages: data.totalPages,
       }
     } catch (e) {
-      if (e instanceof AxiosError) {
-        return thunkAPI.rejectWithValue(e.response!.data)
-      } else {
-        return thunkAPI.rejectWithValue({ message: 'error' })
-      }
+      return thunkAPI.rejectWithValue(e as ErrorResponseType)
     }
   }
 )
 
 const fetchedRoomsUserCreated = createAsyncThunk<
-  {
-    result: string[]
-    entities: { users?: UserEntityType[]; rooms?: RoomEntityType[] }
-  },
+  NormalizedSchema<{ users?: UserEntityType[], rooms?: RoomEntityType[] }, string[]>,
   { userId: string },
-  { rejectValue: IErrorResponse }
+  { rejectValue: ErrorResponseType }
 >('rooms/fetchedRoomsUserCreated', async ({ userId }, thunkAPI) => {
   try {
     const { data } = await roomsService.getRoomsUserCreated({ userId })
 
-    const normalized = normalize<
-      any,
-      { users?: UserEntityType[]; rooms?: RoomEntityType[] }
-    >(data.rooms, [roomSchema])
+    const normalized = normalize(data.rooms, [roomSchema])
 
     return { ...normalized }
   } catch (e) {
-    return thunkAPI.rejectWithValue(
-      (e as AxiosError<IErrorResponse>).response!.data
-    )
+    return thunkAPI.rejectWithValue(e as ErrorResponseType)
   }
 })
 
 const fetchedRoomsUserJoined = createAsyncThunk<
-  {
-    result: string[]
-    entities: { users?: UserEntityType[]; rooms?: RoomEntityType[] }
-  },
+  NormalizedSchema<{ users?: UserEntityType[], rooms?: RoomEntityType[] }, string[]>,
   { userId: string },
-  { rejectValue: IErrorResponse }
+  { rejectValue: ErrorResponseType }
 >('rooms/fetchedRoomsUserJoined', async ({ userId }, thunkAPI) => {
   try {
     const { data } = await roomsService.getRoomsUserJoined({ userId })
@@ -106,9 +91,8 @@ const fetchedRoomsUserJoined = createAsyncThunk<
 
     return { ...normalized }
   } catch (e) {
-    return thunkAPI.rejectWithValue(
-      (e as AxiosError<IErrorResponse>).response!.data
-    )
+    return thunkAPI.rejectWithValue(e as ErrorResponseType)
+
   }
 })
 
@@ -126,7 +110,7 @@ const joinedRoom = createAsyncThunk(
 
       return { roomId, userId }
     } catch (e) {
-      return thunkAPI.rejectWithValue('test')
+      return thunkAPI.rejectWithValue(e as ErrorResponseType)
     }
   }
 )
@@ -141,8 +125,8 @@ const leftRoom = createAsyncThunk(
       await roomsService.leaveRoom({ roomId })
 
       return { roomId, userId }
-    } catch {
-      return thunkAPI.rejectWithValue('test')
+    } catch (e) {
+      return thunkAPI.rejectWithValue(e as ErrorResponseType)
     }
   }
 )
@@ -154,11 +138,11 @@ const roomDeleted = createAsyncThunk(
     thunkAPI
   ) => {
     try {
-      const { data } = await roomsService.deleteRoom({ roomId, password })
+      await roomsService.deleteRoom({ roomId, password })
 
       return { roomId }
     } catch (e) {
-      return thunkAPI.rejectWithValue('test')
+      return thunkAPI.rejectWithValue(e as ErrorResponseType)
     }
   }
 )
@@ -232,7 +216,7 @@ const roomsSlice = createSlice({
       })
       .addCase(fetchedFeedRooms.rejected, (state, { payload }) => {
         state.feed.isFetching = false
-        state.feed.error = (payload as { message: string }).message
+        state.feed.error = payload!.response!.data.message
       })
       .addCase(fetchedRoomsUserCreated.pending, (state, { payload }) => {
         state.profile.created.error = null

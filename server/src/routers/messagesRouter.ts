@@ -6,6 +6,16 @@ import { messageImagesUpload } from '../utils/uploads'
 
 const router = express.Router()
 
-router.post('/rooms/:roomId/messages', populateUserMiddleware, messageImagesUpload.array('images'), messagesController.createMessage)
+router.post(
+  '/rooms/:roomId/messages',
+  populateUserMiddleware,
+  messageImagesUpload.array('images'),
+  messagesController.createMessage
+)
+router.get(
+  '/rooms/:roomId/messages',
+  populateUserMiddleware,
+  messagesController.getRoomMessages
+)
 
 export default router

@@ -11,7 +11,7 @@ import useQueryParam from '../hooks/useQueryParam'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { AxiosError } from 'axios'
-import { IErrorResponse } from '../types'
+import { ErrorResponseType } from '../types'
 
 interface IFormValues {
   username: string
@@ -42,7 +42,9 @@ export default () => {
     resolver: yupResolver(validationSchema),
   })
 
-  const handleAxiosError = (data: IErrorResponse) => {
+  const handleAxiosError = (e: ErrorResponseType) => {
+    const data = e.response!.data
+
     switch (data.errorCode) {
       case 'validation_error':
         data.errors.forEach((error) => {
@@ -67,7 +69,7 @@ export default () => {
       initSocket()
       socket.emit('login')
     } catch (e) {
-      handleAxiosError(e as IErrorResponse)
+      handleAxiosError(e as ErrorResponseType)
     }
   }
 

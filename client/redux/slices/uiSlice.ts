@@ -1,8 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { AxiosError } from 'axios'
-import { IErrorResponse } from '../../types'
+import { } from '../../types'
 import { RootState } from '../store'
 import { authActions } from './authSlice'
+import { roomsActions } from './roomsSlice'
 
 export enum ModalsEnum {
   JOIN_ROOM,
@@ -20,7 +21,7 @@ interface IState {
 }
 
 const initialState: IState = {
-  currentActiveModal: ModalsEnum.CREATE_ROOM,
+  currentActiveModal: null,
   alert: {
     isOpen: false,
     message: null,
@@ -47,15 +48,18 @@ const uiSlice = createSlice({
   extraReducers(builder) {
     builder
       .addCase(authActions.login.rejected, (state, { payload }) => {
-        switch (payload!.errorCode) {
-          case 'unknown_error':
-            state.alert = { isOpen: true, message: payload!.message }
+        if (payload!.response!.data.errorCode === 'unknown_error') {
+          state.alert = { isOpen: true, message: payload!.response!.data.message }
         }
       })
       .addCase(authActions.register.rejected, (state, { payload }) => {
-        switch (payload!.errorCode) {
-          case 'unknown_error':
-            state.alert = { isOpen: true, message: payload!.message }
+        if (payload!.response!.data.errorCode === 'unknown_error') {
+          state.alert = { isOpen: true, message: payload!.response!.data.message }
+        }
+      })
+      .addCase(roomsActions.createdRoom.rejected, (state, { payload }) => {
+        if (payload!.response!.data.errorCode === 'unknown_error') {
+          state.alert = { isOpen: true, message: payload!.response!.data.message }
         }
       })
   },

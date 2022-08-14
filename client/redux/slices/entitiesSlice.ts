@@ -1,6 +1,6 @@
 import { createEntityAdapter, createSlice } from '@reduxjs/toolkit'
 import { schema, normalize, denormalize } from 'normalizr'
-import { IRoom, IUser } from '../../types'
+import { IMessage, IRoom, IUser } from '../../types'
 import { RootState } from '../store'
 import { authActions } from './authSlice'
 import { roomsActions } from './roomsSlice'
@@ -13,6 +13,10 @@ export type RoomEntityType = Omit<IRoom, 'creator' | 'participants'> & {
 
 export type UserEntityType = IUser
 
+export type MessageEntityType = Omit<IMessage, 'creator'> & {
+  creator: string
+}
+
 export const roomsAdapter = createEntityAdapter<RoomEntityType>({
   selectId: (room) => room._id,
 })
@@ -21,7 +25,15 @@ const usersAdapter = createEntityAdapter<UserEntityType>({
   selectId: (user) => user._id,
 })
 
+const messagesAdapter = createEntityAdapter<MessageEntityType>({
+  selectId: (user) => user._id,
+})
+
 export const userSchema = new schema.Entity('users', {}, { idAttribute: '_id' })
+
+export const messageSchema = new schema.Entity('messages', {
+  creator: userSchema
+}, { idAttribute: '_id' })
 
 export const roomSchema = new schema.Entity(
   'rooms',
@@ -29,7 +41,7 @@ export const roomSchema = new schema.Entity(
     creator: userSchema,
     participants: [userSchema],
   },
-  { idAttribute: '_id' }
+  { idAttribute: '_id', processStrategy: (entity) => ({ ...entity, participants: [] }) }
 )
 
 const entitiesSlice = createSlice({
@@ -108,7 +120,6 @@ const entitiesSlice = createSlice({
         roomsAdapter.updateOne(state.rooms, {
           id: payload.roomId,
           changes: {
-            participants: [...oldRoom.participants, payload.userId],
             isCurrentUserJoined: true,
             totalNumParticipants: oldRoom.totalNumParticipants + 1,
           },
@@ -120,9 +131,6 @@ const entitiesSlice = createSlice({
         roomsAdapter.updateOne(state.rooms, {
           id: payload.roomId,
           changes: {
-            participants: oldRoom.participants.filter(
-              (_id) => _id !== payload.userId
-            ),
             isCurrentUserJoined: false,
             totalNumParticipants: oldRoom.totalNumParticipants - 1,
           },
@@ -142,6 +150,19 @@ const entitiesSlice = createSlice({
           id: payload.userId,
           changes: { isOnline: false },
         })
+      })
+      .addCase(usersActions.fetchedRoomParticipants.fulfilled, (state, { payload }) => {
+        if (payload.entities.users) {
+          usersAdapter.setMany(state.users, payload.entities.users)
+          const room = state.rooms.entities[payload.roomId]
+
+          if (room) {
+            room.participants = [...room.participants, ...payload.result]
+          }
+        }
+      })
+      .addCase(usersActions.roomPopupParticipantsDeleted, (state, { payload }) => {
+        state.rooms.entities[payload.roomId]!.participants = []
       })
   },
 })

@@ -9,7 +9,7 @@ export default (error: unknown, req: express.Request, res: express.Response, nex
     const json: IErrorResponse = {
       message: error.message,
       errorCode: error.errorCode,
-      ...(error.errors && { errors: error.errors })
+      ...(error.errors && { errors: error.errors }),
     }
 
     return res.status(error.status).json(json)
@@ -17,7 +17,7 @@ export default (error: unknown, req: express.Request, res: express.Response, nex
 
   const json: IErrorResponse = {
     message: 'Unknown error',
-    errorCode: 'unknown_error'
+    errorCode: 'unknown_error',
   }
 
   return res.status(500).json(json)

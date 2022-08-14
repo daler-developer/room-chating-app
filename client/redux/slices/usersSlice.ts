@@ -4,9 +4,9 @@ import {
   createSlice,
   PayloadAction,
 } from '@reduxjs/toolkit'
-import { normalize } from 'normalizr'
-import { IErrorResponse, IUser } from '../../types'
-import { IUsersFilterObj } from '../../pages/users'
+import { normalize, NormalizedSchema } from 'normalizr'
+import { ErrorResponseType, IUser } from '../../types'
+import { IFilterObj as IUsersFilterObj } from '../../pages/users'
 import usersService from '../../services/usersService'
 import { RootState } from '../store'
 import { entitiesSelectors, UserEntityType, userSchema } from './entitiesSlice'
@@ -14,14 +14,19 @@ import { AxiosError } from 'axios'
 
 const userLoggedIn = createAction<{ userId: string }>('users/userLoggedIn')
 const userLoggedOut = createAction<{ userId: string }>('users/userLoggedOut')
+const roomPopupParticipantsDeleted = createAction<{ roomId: string }>('users/roomPopupParticipantsDeleted')
 
-const fetchedFeedUsers = createAsyncThunk(
+const fetchedFeedUsers = createAsyncThunk<
+  NormalizedSchema<{ users?: UserEntityType[] }, string[]> & { totalPages: number },
+  IUsersFilterObj, 
+  { rejectValue: ErrorResponseType }
+>(
   'users/fetchedFeedUsers',
-  async (filterObj: IUsersFilterObj, thunkAPI) => {
+  async (filterObj, thunkAPI) => {
     try {
       const { data } = await usersService.getUsers(filterObj)
 
-      const normalized = normalize<any, { users: UserEntityType[] }>(
+      const normalized = normalize(
         data.users,
         [userSchema]
       )
@@ -31,9 +36,7 @@ const fetchedFeedUsers = createAsyncThunk(
         totalPages: data.totalPages,
       }
     } catch (e) {
-      if (e instanceof AxiosError) {
-        return thunkAPI.rejectWithValue(e.response!.data)
-      }
+      return thunkAPI.rejectWithValue(e as ErrorResponseType)
     }
   }
 )
@@ -41,16 +44,30 @@ const fetchedFeedUsers = createAsyncThunk(
 const fetchedUser = createAsyncThunk<
   { user: IUser },
   { userId: string },
-  { rejectValue: IErrorResponse }
+  { rejectValue: ErrorResponseType }
 >('users/fetchedUser', async ({ userId }, thunkAPI) => {
   try {
     const { data } = await usersService.getUser({ userId })
 
     return data
   } catch (e) {
-    return thunkAPI.rejectWithValue(
-      (e as AxiosError<IErrorResponse>).response!.data
+    return thunkAPI.rejectWithValue(e as ErrorResponseType)
+
+  }
+})
+
+const fetchedRoomParticipants = createAsyncThunk<{ result: string[], entities: { users?: IUser[] }, roomId: string }, { roomId: string, offset?: number }, { rejectValue: ErrorResponseType }>('users/fetchedRoomParticipants', async ({ roomId, offset }, thunkAPI) => {
+  try {
+    const { data } = await usersService.getRoomParticipants({ roomId, offset })
+
+    const normalized = normalize(
+      data.users,
+      [userSchema]
     )
+
+    return { roomId, ...normalized }
+  } catch (e) {
+    return thunkAPI.rejectWithValue(e as ErrorResponseType)
   }
 })
 
@@ -128,7 +145,9 @@ export const usersActions = {
   fetchedFeedUsers,
   userLoggedIn,
   userLoggedOut,
-  fetchedUser
+  fetchedUser,
+  fetchedRoomParticipants,
+  roomPopupParticipantsDeleted
 }
 
 export const usersSelectors = {

@@ -1,8 +1,8 @@
 import { AxiosResponse } from 'axios'
-import { IUsersFilterObj } from '../pages/users'
+import { IFilterObj as IUsersFilterObj } from "../pages/users"
 import { UpdateProfileProps } from '../redux/slices/usersSlice'
 import { IUser } from '../types'
-import { IErrorResponse } from '../types'
+import {  } from '../types'
 import client from './client'
 
 export interface IAuthResponse {
@@ -21,7 +21,7 @@ class UsersService {
   }
 
   async login(username: string, password: string) {
-    const result = await client.post<IAuthResponse | IErrorResponse>(
+    const result = await client.post<IAuthResponse>(
       '/api/users/login',
       { username, password }
     )
@@ -45,20 +45,28 @@ class UsersService {
     return result
   }
 
-  async getUsers({ search, sort, page }: IUsersFilterObj) {
+  async getUsers({ search, status, page }: IUsersFilterObj) {
     const result = await client.get<{ users: IUser[]; totalPages: number }>(
       '/api/users',
       {
-        params: { search, sort, page },
+        params: { search, status, page },
       }
     )
 
     return result
   }
-
+  
   async getUser({ userId }: { userId: string }) {
     const result = await client.get<{ user: IUser }>(`/api/users/${userId}`)
 
+    return result
+  }
+  
+  async getRoomParticipants ({ roomId, offset }: { roomId: string, offset?: number }) {
+    const result = await client.get<{ users: Omit<IUser, 'participants'>[] }>(`/api/rooms/${roomId}/participants`, {
+      params: { offset }
+    })
+  
     return result
   }
 

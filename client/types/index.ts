@@ -1,3 +1,5 @@
+import { AxiosError } from "axios"
+
 export interface IUser {
   _id: string
   username: string
@@ -19,6 +21,14 @@ export interface IRoom {
   isCreatedByCurrentUser: boolean
 }
 
+export interface IMessage {
+  _id: string
+  text: string
+  images?: string[]
+  creator: IUser
+  isCreatedByCurrentUser: boolean
+}
+
 export type ErrorCodeType =
   | 'validation_error'
   | 'user_not_found'
@@ -27,11 +37,11 @@ export type ErrorCodeType =
   | 'user_already_exists'
   | 'unknown_error'
 
-export interface IErrorResponse {
+export type ErrorResponseType = AxiosError<{
   errorCode: ErrorCodeType
   message: string
   errors: {
     path: string
     messages: string[]
   }[]
-}
+}>

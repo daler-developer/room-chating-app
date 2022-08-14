@@ -1,9 +1,8 @@
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit'
 import { AxiosError } from 'axios'
-import { IUser } from '../../types'
+import { ErrorResponseType, IUser } from '../../types'
 import usersService, { IAuthResponse } from '../../services/usersService'
 import { initSocket, socket } from '../../socket'
-import { IErrorResponse } from '../../types'
 import { RootState } from '../store'
 import { entitiesSelectors, UserEntityType, userSchema } from './entitiesSlice'
 import { normalize } from 'normalizr'
@@ -22,21 +21,19 @@ const profileUpdated = createAsyncThunk<
     entities: { users?: UserEntityType[] }
   },
   UpdateProfileProps,
-  { rejectValue: IErrorResponse }
+  { rejectValue: ErrorResponseType }
 >('users/profileUpdated', async (updateProps, thunkAPI) => {
   try {
     const { data } = await usersService.updateProfile(updateProps)
     
-    const normalized = normalize<any>(
+    const normalized = normalize(
       data.user,
       userSchema
     )
 
     return { ...normalized }
   } catch (e) {
-    return thunkAPI.rejectWithValue(
-      (e as AxiosError<IErrorResponse>).response!.data
-    )
+    return thunkAPI.rejectWithValue(e as ErrorResponseType)
   }
 })
 
@@ -51,7 +48,7 @@ type LoginActionArgType = { username: string; password: string }
 const login = createAsyncThunk<
   IAuthResponse,
   LoginActionArgType,
-  { rejectValue: IErrorResponse }
+  { rejectValue: ErrorResponseType }
 >('auth/login', async ({ username, password }, thunkAPI) => {
   try {
     const result = await usersService.login(username, password)
@@ -63,7 +60,7 @@ const login = createAsyncThunk<
     return data
   } catch (e) {
     return thunkAPI.rejectWithValue(
-      (e as AxiosError<IErrorResponse>).response!.data
+      e as ErrorResponseType
     )
   }
 })
@@ -78,7 +75,7 @@ type RegisterActionArgType = {
 const register = createAsyncThunk<
   IAuthResponse,
   RegisterActionArgType,
-  { rejectValue: IErrorResponse }
+  { rejectValue: ErrorResponseType }
 >(
   'auth/register',
   async ({ username, firstName, lastName, password }, thunkAPI) => {
@@ -95,7 +92,7 @@ const register = createAsyncThunk<
       return data
     } catch (e) {
       return thunkAPI.rejectWithValue(
-        (e as AxiosError<IErrorResponse>).response!.data
+        e as ErrorResponseType
       )
     }
   }

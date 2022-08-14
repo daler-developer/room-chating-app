@@ -22,7 +22,7 @@ import {
 } from 'react'
 import { io } from 'socket.io-client'
 import AuthProtected from '../../components/AuthProtected'
-import FilterBlock, { IFilterObj } from '../../components/FilterBlock'
+import FilterBlock from '../../components/FilterBlock'
 import Layout from '../../components/Layout'
 import SearchForm from '../../components/SearchForm'
 import UserCard from '../../components/UserCard'
@@ -34,13 +34,13 @@ import { IUser } from '../../types'
 import { usersActions, usersSelectors } from '../../redux/slices/usersSlice'
 import usersService from '../../services/usersService'
 
-export interface IUsersFilterObj {
-  search?: string
-  sort?: 'all' | 'online' | 'offline'
-  page?: number
+export interface IFilterObj {
+  search: string
+  status: 'all' | 'online' | 'offline'
+  page: number
 }
 
-const sortItems = [
+const statusItems = [
   {
     value: 'all',
     label: 'All',
@@ -56,15 +56,27 @@ const sortItems = [
 ]
 
 const Users = () => {
+  const [filterObj, setFilterObj] = useState<IFilterObj>({
+    search: '',
+    status: 'all',
+    page: 1,
+  })
+
   const users = useTypedSelector(usersSelectors.selectFeedUsers)
+
+  useEffect(() => {
+    fetchUsers()
+  }, [filterObj])
 
   const dispatch = useTypedDispatch()
 
-  const fetchUsers = ({ page, sort, search }: IUsersFilterObj) => {
+  const fetchUsers = () => {
+    const { page, search, status } = filterObj
+
     dispatch(
       usersActions.fetchedFeedUsers({
         page,
-        sort,
+        status,
         search,
       })
     )
@@ -72,11 +84,59 @@ const Users = () => {
 
   return (
     <>
-      <FilterBlock
-        onTriggerFetch={(filterObj) => fetchUsers(filterObj as IUsersFilterObj)}
-        totalPages={users.totalPages}
-        sortItems={sortItems}
-      />
+      <Box>
+        <SearchForm
+          value={filterObj.search}
+          onChange={(e) =>
+            setFilterObj({
+              ...filterObj,
+              page: 1,
+              search: e.currentTarget.value,
+            })
+          }
+        />
+
+        <Box
+          sx={{
+            mt: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            columnGap: '15px',
+          }}
+        >
+          <FormControl size='small'>
+            <Select
+              labelId='demo-simple-select-label'
+              id='demo-simple-select'
+              value={filterObj.status}
+              onChange={(e) =>
+                setFilterObj({
+                  ...filterObj,
+                  page: 1,
+                  status: e.target.value as IFilterObj['status'],
+                })
+              }
+            >
+              {statusItems.map((item) => (
+                <MenuItem value={item.value}>{item.label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <Button variant='contained'>Reload</Button>
+
+          <Pagination
+            sx={{ ml: 'auto' }}
+            count={users.totalPages}
+            page={filterObj.page}
+            onChange={(_, value) => setFilterObj({ ...filterObj, page: value })}
+            size='medium'
+            variant='outlined'
+            shape='rounded'
+            color='primary'
+          />
+        </Box>
+      </Box>
 
       <Box sx={{ mt: '30px' }}>
         {users.isFetching ? (

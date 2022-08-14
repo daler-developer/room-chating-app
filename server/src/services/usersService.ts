@@ -1,46 +1,49 @@
-import { UserNotFoundError, ValidationError } from "../errors"
+import { UserNotFoundError, ValidationError } from '../errors'
 import collections from '../db/collections'
 import { ObjectId } from 'mongodb'
 import * as Joi from 'joi'
+import roomsService from './roomsService'
+import { IUser } from '../types'
 
 const ITEMS_PER_PAGE = 4
 
 export interface IFitlerObj {
   page?: number
   search?: string
-  sort?: 'all' | 'online' | 'offline'
+  status?: 'all' | 'online' | 'offline'
 }
 
 class UsersService {
-
-  private async queryUsers({ $match = {}, page = 1 }: { $match?: object, page?: number }) {
-    const results = await collections.users.aggregate([
-      {
-        $match: {
-          ...$match
-        }
-      },
-      {
-        $skip: (page - 1) * ITEMS_PER_PAGE
-      },
-      {
-        $limit: ITEMS_PER_PAGE
-      }
-    ]).toArray()
+  private async queryUsers({ $match = {}, page = 1 }: { $match?: object; page?: number }) {
+    const results = await collections.users
+      .aggregate([
+        {
+          $match: {
+            ...$match,
+          },
+        },
+        {
+          $skip: (page - 1) * ITEMS_PER_PAGE,
+        },
+        {
+          $limit: ITEMS_PER_PAGE,
+        },
+      ])
+      .toArray()
 
     return results
   }
 
   async setUserOnlineStatus(userId: ObjectId, isOnline: boolean) {
-    await collections.users.updateOne({ _id: userId }, { $set: { isOnline} })
+    await collections.users.updateOne({ _id: userId }, { $set: { isOnline } })
   }
 
   async userWithUsernameExists(username: string) {
     return !!(await collections.users.findOne({ username }))
   }
 
-  async getUserById (_id: ObjectId) {
-    const [user] = await this.queryUsers({ $match: { _id }})
+  async getUserById(_id: ObjectId) {
+    const [user] = await this.queryUsers({ $match: { _id } })
 
     if (!user) {
       throw new UserNotFoundError()
@@ -49,7 +52,7 @@ class UsersService {
     return user
   }
 
-  async getUserByUsername (username: string) {
+  async getUserByUsername(username: string) {
     const [user] = await this.queryUsers({ $match: { username } })
 
     if (!user) {
@@ -58,39 +61,47 @@ class UsersService {
 
     return user
   }
-  
-  async createUser (data: { username: string, password: string, firstName: string, lastName: string, }) {
+
+  async createUser(data: { username: string; password: string; firstName: string; lastName: string }) {
     const { username, firstName, lastName, password } = data
 
     const { insertedId } = await collections.users.insertOne({
       username,
       firstName,
       lastName,
-      password
+      password,
     })
 
     return await this.getUserById(insertedId)
   }
 
-  async getUsers ({ page, search, sort }: IFitlerObj) {
+  async getUsers({
+    page,
+    search,
+    status,
+    roomIdJoined,
+    currentUser,
+  }: IFitlerObj & { roomIdJoined?: ObjectId; currentUser: IUser }) {
     const $match = {} as any
 
     if (search) {
       $match.username = { $regex: new RegExp(search, 'i') }
     }
-    
-    if (sort === 'online') {
+
+    if (status === 'online') {
       $match.isOnline = true
     }
-    
-    if (sort === 'offline') {
+
+    if (status === 'offline') {
       $match.isOnline = false
     }
 
-    return this.queryUsers({ page, $match })
+    const users = await this.queryUsers({ page, $match })
+
+    return users
   }
 
-  async getTotalUsersPages ({ search, sort }: { search?: string, sort?: IFitlerObj['sort'] }) {
+  async getTotalUsersPages({ search, status }: { search?: string; status?: IFitlerObj['status'] }) {
     let totalPages = 0
 
     const $match = {} as any
@@ -98,16 +109,16 @@ class UsersService {
     if (search) {
       $match.username = { $regex: new RegExp(search, 'i') }
     }
-    
-    if (sort === 'online') {
+
+    if (status === 'online') {
       $match.isOnline = true
     }
-    
-    if (sort === 'offline') {
+
+    if (status === 'offline') {
       $match.isOnline = false
     }
 
-    const totalDocuments = await collections.users.countDocuments($match) as any
+    const totalDocuments = (await collections.users.countDocuments($match)) as any
 
     totalPages += Math.floor(totalDocuments / ITEMS_PER_PAGE)
 
@@ -118,9 +129,23 @@ class UsersService {
     return totalPages
   }
 
-  async updateProfile ({ userId, removeAvatar = false, newAvatar, newFirstName, newLastName, newUsername }: { userId: ObjectId, newUsername?: string, newFirstName?: string, newLastName?: string, newAvatar?: string, removeAvatar?: boolean }) {
-    const $set = {} as {[key: string]: any}
-    const $unset = {} as {[key: string]: any}
+  async updateProfile({
+    userId,
+    removeAvatar = false,
+    newAvatar,
+    newFirstName,
+    newLastName,
+    newUsername,
+  }: {
+    userId: ObjectId
+    newUsername?: string
+    newFirstName?: string
+    newLastName?: string
+    newAvatar?: string
+    removeAvatar?: boolean
+  }) {
+    const $set = {} as { [key: string]: any }
+    const $unset = {} as { [key: string]: any }
 
     if (newFirstName) {
       $set.firstName = newFirstName
@@ -145,7 +170,7 @@ class UsersService {
     return updatedUser
   }
 
-  generateAvatarUrl (filename: string) {
+  generateAvatarUrl(filename: string) {
     return `/uploads/avatars/${filename}`
   }
 }

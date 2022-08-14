@@ -17,6 +17,8 @@ import * as yup from 'yup'
 import useTypedDispatch from '../hooks/useTypedDispatch'
 import { useEffect, useState } from 'react'
 import { roomsActions } from '../redux/slices/roomsSlice'
+import { AxiosError } from 'axios'
+import { ErrorResponseType } from '../types'
 
 interface IFormValues {
   name: string
@@ -46,10 +48,30 @@ export default () => {
 
   const closeModal = () => dispatch(uiActions.closedCurrentActiveModal())
 
-  const handleSubmit = async ({ name, password }: IFormValues) => {
-    await dispatch(roomsActions.createdRoom({ name, password }))
+  const handleAxiosError = (e: ErrorResponseType) => {
+    const data = e.response!.data
 
-    closeModal()
+    switch (data.errorCode) {
+      case 'validation_error':
+        data.errors.forEach((error) => {
+          form.setError(error.path as keyof IFormValues, {
+            message: error.messages[0],
+          })
+        })
+        break
+    }
+  }
+
+  const handleSubmit = async ({ name, password }: IFormValues) => {
+    try {
+      await dispatch(
+        roomsActions.createdRoom({ name, ...(withPassword && { password }) })
+      ).unwrap()
+
+      closeModal()
+    } catch (e) {
+      handleAxiosError(e as ErrorResponseType)
+    }
   }
 
   return (

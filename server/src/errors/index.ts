@@ -1,11 +1,21 @@
-import { ErrorCodeType } from "../types"
+import { ErrorCodeType } from '../types'
 
 export class RequestError extends Error {
   status: number
   errorCode: ErrorCodeType
   errors?: any[]
 
-  constructor({ message, status, errors , errorCode}: { errorCode: ErrorCodeType, message: string, status: number, errors?: any[] }) {
+  constructor({
+    message,
+    status,
+    errors,
+    errorCode,
+  }: {
+    errorCode: ErrorCodeType
+    message: string
+    status: number
+    errors?: any[]
+  }) {
     super(message)
     this.status = status
     this.errors = errors
@@ -15,31 +25,52 @@ export class RequestError extends Error {
 
 export class UserWithSameUsernameAlreadyExistsError extends RequestError {
   constructor() {
-    super({ message: 'User with same username already exists', status: 400, errorCode: 'user_already_exists' })
+    super({
+      message: 'User with same username already exists',
+      status: 400,
+      errorCode: 'user_already_exists',
+    })
   }
 }
 
 export class NotAuthenticatedError extends RequestError {
   constructor() {
-    super({ message: 'Not authenticated',  status: 401, errorCode: 'not_authenticated' })
+    super({
+      message: 'Not authenticated',
+      status: 401,
+      errorCode: 'not_authenticated',
+    })
   }
 }
 
 export class UserNotFoundError extends RequestError {
   constructor() {
-    super({ message: 'User was not found', status: 404, errorCode: 'user_not_found' })
+    super({
+      message: 'User was not found',
+      status: 404,
+      errorCode: 'user_not_found',
+    })
   }
 }
 
 export class IncorrectPasswordError extends RequestError {
   constructor() {
-    super({ message: 'Incorrect password', status: 400, errorCode: 'incorrect_password' })
+    super({
+      message: 'Incorrect password',
+      status: 400,
+      errorCode: 'incorrect_password',
+    })
   }
 }
 
 export class ValidationError extends RequestError {
   constructor(errors: any[]) {
-    super({ message: 'Invalid inputs', status: 500, errors, errorCode: 'validation_error' })
+    super({
+      message: 'Invalid inputs',
+      status: 500,
+      errors,
+      errorCode: 'validation_error',
+    })
   }
 }
 

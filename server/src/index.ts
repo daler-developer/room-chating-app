@@ -8,6 +8,7 @@ import validateRequestMiddleware from './middlewares/validateRequestMiddleware'
 import * as cookie from 'cookie-parser'
 import * as path from 'path'
 import client from './db/client'
+import * as yup from 'yup'
 
 const app = express()
 const httpServer = createServer(app)
@@ -27,7 +28,7 @@ initSocketIO(httpServer)
 
 const start = async () => {
   await client.connect()
-  
+
   initSocketIO(httpServer)
 
   httpServer.listen(4000, () => console.log('listenning'))

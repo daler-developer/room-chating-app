@@ -1,5 +1,5 @@
-import { IUser } from "../types";
-import client from "./client";
+import { IUser } from '../types'
+import client from './client'
 
 export default {
   users: client.db('messenger').collection<IUser>('users'),

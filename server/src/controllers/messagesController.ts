@@ -1,41 +1,33 @@
 import { Request, Response, NextFunction } from 'express'
 import { ObjectId } from 'mongodb'
-import * as multer from 'multer'
 import messagesService from '../services/messagesService'
-import * as Joi from 'joi'
+import * as yup from 'yup'
 import { ValidationError } from '../errors'
+import * as yupUtils from '../utils/yup'
 
-const createMessageValidationSchema = Joi.object<{ text?: string, roomId: ObjectId, images?: any[] }>({
-  text: Joi.string().min(1).max(500),
-  roomId: Joi.required(),
-  images: Joi.array()
+const createMessageValidationSchema = yup.object({
+  text: yup.string().max(500).required(),
+  images: yup.array(),
+})
+
+const getRoomMessagesValidationSchema = yup.object({
+  offset: yup.number().min(0)
 })
 
 class MessagesController {
-
   async createMessage(req: Request, res: Response, next: NextFunction) {
     try {
-      const { error, value: { images, text, roomId } } = createMessageValidationSchema.validate({
+      const roomId = new ObjectId(req.params.roomId)
+      const { images, text } = await yupUtils.validateData({
         images: req.files,
-        text: req.body.text,
-        roomId: new ObjectId(req.params.roomId)
-      })
+        text: req.body.text
+      }, createMessageValidationSchema)
 
-      if (error) {
-        throw new ValidationError()
-      }
-
-      if (!images && !text) {
-        throw new ValidationError()
-      }
-      
-      const currentUser = req.user
-
-      const message = await messagesService.createMessage({ 
-        creatorId: currentUser._id, 
-        roomId, 
+      const message = await messagesService.createMessage({
+        currentUser: req.user,
+        roomId,
         text,
-        ...Object.assign({}, images && images.length ? { images } : {}) 
+        ...Object.assign({}, images && images.length ? { images } : {}),
       })
 
       return res.status(202).json({ message })
@@ -44,6 +36,20 @@ class MessagesController {
     }
   }
 
+  async getRoomMessages (req: Request, res: Response, next: NextFunction) {
+    try {
+      const roomId = new ObjectId(req.params.roomId)
+      const { offset } = await getRoomMessagesValidationSchema.validate({
+        offset: req.query.offset
+      })
+
+      const messages = await messagesService.getRoomMessages({ roomId, offset, currentUser: req.user })
+
+      return res.status(200).json({ messages })
+    } catch (e) {
+      return next(e)
+    }
+  }
 }
 
 export default new MessagesController()

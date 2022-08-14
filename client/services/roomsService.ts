@@ -1,4 +1,4 @@
-import { IRoomsFilterObj } from '../pages/rooms'
+import { IFilterObj as IRoomsFilterObj } from '../pages/rooms'
 import { IRoom } from '../types'
 import client from './client'
 
@@ -13,12 +13,12 @@ class RoomsService {
     return result
   }
 
-  async getRooms({ page, search, sort }: IRoomsFilterObj) {
+  async getRooms({ page, search, access }: IRoomsFilterObj) {
     const result = await client.get<{
       rooms: Array<IRoom>
       totalPages: number
     }>('/api/rooms', {
-      params: { page, search, sort },
+      params: { page, search, access },
     })
 
     return result

@@ -1,11 +1,11 @@
 import { InputAdornment, TextField } from '@mui/material'
 import { Search } from '@mui/icons-material'
-import { SyntheticEvent, useEffect, useState } from 'react'
+import { FormEvent, SyntheticEvent, useEffect, useState } from 'react'
 import useDebounce from '../hooks/useDebounce'
 
 interface IProps {
   value: string
-  onChange: (e: SyntheticEvent) => void
+  onChange: (e: FormEvent<HTMLInputElement>) => void
 }
 
 export default ({ value, onChange }: IProps) => {

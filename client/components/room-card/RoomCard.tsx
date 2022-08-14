@@ -7,6 +7,7 @@ import {
   Menu,
   MenuItem,
   Paper,
+  Popover,
   Typography,
 } from '@mui/material'
 import {
@@ -14,12 +15,13 @@ import {
   LockOpenOutlined as LockOpenIcon,
   MoreVert as MoreVertIcon,
 } from '@mui/icons-material'
-import { IRoom } from '../types'
-import useTypedDispatch from '../hooks/useTypedDispatch'
-import { ModalsEnum, uiActions } from '../redux/slices/uiSlice'
-import { roomsActions } from '../redux/slices/roomsSlice'
+import { IRoom } from '../../types'
+import useTypedDispatch from '../../hooks/useTypedDispatch'
+import { ModalsEnum, uiActions } from '../../redux/slices/uiSlice'
+import { roomsActions } from '../../redux/slices/roomsSlice'
 import NextLink from 'next/link'
 import { useRef, useState } from 'react'
+import ParticipantsPopup from './ParticipantsPopup'
 
 interface IProps {
   room: IRoom
@@ -27,10 +29,12 @@ interface IProps {
 
 export default ({ room }: IProps) => {
   const [isPopupOpen, setIsPopupOpen] = useState(false)
+  const [isParticipantsPopupOpen, setIsParticipantsPopupOpen] = useState(false)
 
   const dispatch = useTypedDispatch()
 
   const menuBtnRef = useRef(null!)
+  const participantsRef = useRef<any>(null!)
 
   const handleJoinRoomBtnClick = () => {
     if (room.isPrivate) {
@@ -105,26 +109,25 @@ export default ({ room }: IProps) => {
         sx={{
           mt: '100px',
           display: 'flex',
-          alignItems: 'center',
           columnGap: '15px',
         }}
       >
-        <AvatarGroup sx={{ alignSelf: 'end' }}>
-          {room.participants.map((participant, i) => (
-            <Avatar
-              key={i}
-              src={participant.avatar}
-              sx={{ width: '20px', height: '20px' }}
-            />
-          ))}
-          {room.totalNumParticipants > 2 && (
-            <Avatar sx={{ width: '20px', height: '20px' }}>
-              <Typography fontSize='10px'>
-                +{room.totalNumParticipants - 2}
-              </Typography>
-            </Avatar>
-          )}
-        </AvatarGroup>
+        <Box
+          sx={{ alignSelf: 'end', cursor: 'pointer' }}
+          onMouseEnter={() => setIsParticipantsPopupOpen(true)}
+        >
+          <Typography variant='body2' ref={participantsRef}>
+            {room.totalNumParticipants} participants
+          </Typography>
+        </Box>
+
+        <ParticipantsPopup
+          open={isParticipantsPopupOpen}
+          onClose={() => setIsParticipantsPopupOpen(false)}
+          anchorEl={participantsRef.current}
+          room={room}
+        />
+
         <Box sx={{ display: 'flex', columnGap: '15px', ml: 'auto' }}>
           {room.isCurrentUserJoined ? (
             <>

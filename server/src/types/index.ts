@@ -1,12 +1,12 @@
 import { ObjectId } from 'mongodb'
 
 export type ErrorCodeType =
-  'validation_error' |
-  'user_not_found' |
-  'incorrect_password' |
-  'not_authenticated' |
-  'user_already_exists' |
-  'unknown_error'
+  | 'validation_error'
+  | 'user_not_found'
+  | 'incorrect_password'
+  | 'not_authenticated'
+  | 'user_already_exists'
+  | 'unknown_error'
 
 export interface IErrorResponse {
   errorCode: ErrorCodeType
@@ -31,6 +31,6 @@ export interface IRoom {
   creator: IUser
   isCurrentUserJoined: boolean
   totalNumParticipants: boolean
-  participants_ids: ObjectId[] 
+  participants_ids: ObjectId[]
   isCreatedByCurrentUser: boolean
 }

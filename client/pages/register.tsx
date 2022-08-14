@@ -9,7 +9,7 @@ import { authActions } from '../redux/slices/authSlice'
 import { socket, initSocket } from '../socket'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
-import { IErrorResponse } from '../types'
+import { ErrorResponseType } from '../types'
 
 interface IFormValues {
   username: string
@@ -42,7 +42,9 @@ export default () => {
     resolver: yupResolver(validationSchema),
   })
 
-  const handleError = (data: IErrorResponse) => {
+  const handleError = (e: ErrorResponseType) => {
+    const data = e.response!.data
+
     switch (data.errorCode) {
       case 'validation_error':
         data.errors.forEach((error) => {
@@ -68,7 +70,7 @@ export default () => {
         authActions.register({ username, firstName, lastName, password })
       ).unwrap()
     } catch (e) {
-      handleError(e as IErrorResponse)
+      handleError(e as ErrorResponseType)
     }
   }
 
